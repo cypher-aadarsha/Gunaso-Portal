@@ -34,13 +34,16 @@ else:
 def process_complaint_ai(self, complaint_id):
     """
     Asynchronous task to process a complaint with the Gemini AI.
+    'complaint_id' is now the tracking_id (a UUID).
     """
     if not api_key or not default_retry:
         print(f"AI processing skipped for {complaint_id}: API key not configured.")
         return
 
     try:
-        complaint = Complaint.objects.get(id=complaint_id)
+        # --- THIS IS THE FIX ---
+        # Look up the complaint by 'tracking_id' instead of 'id'
+        complaint = Complaint.objects.get(tracking_id=complaint_id)
     except Complaint.DoesNotExist:
         print(f"Complaint {complaint_id} not found. Task aborting.")
         return
@@ -51,14 +54,14 @@ def process_complaint_ai(self, complaint_id):
     Analyze the following complaint text.
     Respond ONLY with a valid JSON object (no markdown, no other text).
     The JSON object must have exactly two keys:
-    1. "category": A concise category for the complaint (e.g., "Corruption / Bribe", "Service Delay", "Officer Misconduct", "Policy Issue", "Infrastructure Problem", "Public Safety", "Other").
+    1. "category": A concise category for the complaint (e..g., "Corruption / Bribe", "Service Delay", "Officer Misconduct", "Policy Issue", "Infrastructure Problem", "Public Safety", "Other").
     2. "priority": Your suggested priority ("LOW", "MEDIUM", or "HIGH").
     """
 
     # Format the user's complaint text
     user_prompt = f"""
     Title: {complaint.title}
-    Details: {complaint.details}
+    Details: {complaint.description}
     """
 
     try:

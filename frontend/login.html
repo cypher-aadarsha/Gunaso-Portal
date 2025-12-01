@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Gunaso Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 antialiased">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <div class="flex min-h-screen items-center justify-center p-4">
+        <div class="grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-2xl bg-white shadow-2xl md:grid-cols-2 min-h-[500px]">
+            
+            <!-- Column 1: Branding & Info (Left Side) -->
+            <div class="hidden md:flex flex-col justify-between bg-gradient-to-br from-blue-700 to-blue-900 p-8 text-white relative">
+                <div>
+                    <!-- Header Logo (Small) -->
+                    <div class="mb-8 flex items-center space-x-3">
+                        <div class="h-10 w-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-shield-halved text-xl"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold tracking-tight">Gunaso Portal</h1>
+                    </div>
+
+                    <!-- Welcome Text -->
+                    <div>
+                        <h2 class="text-4xl font-bold leading-tight">Welcome Back.</h2>
+                        <p class="mt-4 text-blue-100 text-lg opacity-90">
+                            Log in to your account to file a new grievance or check the status of an existing one.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Center Image -->
+                <div class="flex-grow flex items-center justify-center py-6">
+                    <div class="bg-white p-6 rounded-full shadow-2xl flex items-center justify-center h-48 w-48">
+                        <img src="images/Govt Logo.jpeg" 
+                             alt="Emblem of Nepal" 
+                             class="w-full h-full object-contain">
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="text-center">
+                    <p class="text-xs text-blue-300 opacity-80 select-none">
+                        &copy; 2025 Government of Nepal. All rights reserved.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Column 2: Login Form (Right Side) -->
+            <div class="flex flex-col justify-center bg-white h-full p-8 lg:p-12">
+                <div class="w-full max-w-sm mx-auto">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Sign In</h2>
+                    <p class="text-gray-600 mb-8">
+                        Don't have an account? 
+                        <a href="register.html" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">Register here</a>
+                    </p>
+
+                    <form id="login-form" class="space-y-5">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <input type="text" id="username" name="username" required 
+                                class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-blue-600 sm:text-sm transition-shadow">
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" id="password" name="password" required 
+                                class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-blue-600 sm:text-sm transition-shadow">
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" id="submit-button"
+                                class="flex w-full justify-center rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+                                <span id="button-text">Log In</span>
+                                <svg id="spinner" class="hidden h-5 w-5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://127.0.0.1:8000/api";
+        const form = document.getElementById('login-form');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const spinner = document.getElementById('spinner');
+
+        function showToast(message, isError = false) {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: { background: isError ? "#ef4444" : "#10b981", borderRadius: "8px" }
+            }).showToast();
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            submitButton.disabled = true;
+            buttonText.classList.add('hidden');
+            spinner.classList.remove('hidden');
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                // 1. Get Token
+                const response = await fetch(`${API_BASE_URL}/token/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    showToast(result.detail || "Invalid credentials", true);
+                    submitButton.disabled = false;
+                    buttonText.classList.remove('hidden');
+                    spinner.classList.add('hidden');
+                    return;
+                }
+
+                // 2. Store Tokens
+                localStorage.setItem('accessToken', result.access);
+                localStorage.setItem('refreshToken', result.refresh);
+
+                // 3. Fetch Profile to Determine Role
+                const profileResponse = await fetch(`${API_BASE_URL}/profile/`, {
+                    headers: { 'Authorization': `Bearer ${result.access}` }
+                });
+
+                if (profileResponse.ok) {
+                    const profile = await profileResponse.json();
+                    
+                    showToast('Login successful! Redirecting...', false);
+
+                    // 4. Redirect based on Role
+                    setTimeout(() => {
+                        if (profile.role === 'ADMIN' || profile.role === 'SUPER') {
+                            window.location.href = "admin_dashboard.html";
+                        } else {
+                            window.location.href = "index.html";
+                        }
+                    }, 1000);
+                } else {
+                    // Fallback if profile fetch fails (e.g., standard django user with no profile)
+                    window.location.href = "index.html";
+                }
+
+            } catch (error) {
+                console.error(error);
+                showToast("Connection failed", true);
+                submitButton.disabled = false;
+                buttonText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gunaso Portal - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>body { font-family: 'Inter', sans-serif; } .toastify { border-radius: 0.5rem; font-weight: 500; }</style>
+</head>
+<body class="bg-gray-50">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <!-- Header -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center text-blue-600">
+                    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.866 10.211 9 11.896 5.134-1.685 9-6.305 9-11.896a12.02 12.02 0 00-1.05-4.016z" /></svg>
+                    <span class="ml-2 text-xl font-bold text-gray-900 tracking-tight">Gunaso Portal</span>
+                </div>
+                <div class="flex items-center relative">
+                    <button id="user-menu-button" class="flex items-center max-w-xs bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 p-1 hover:bg-gray-50 transition-colors">
+                        <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="fa-solid fa-user text-sm"></i></span>
+                        <span class="ml-3 text-sm font-medium text-gray-700 hidden md:block" id="user-name-display">Loading...</span>
+                        <i class="fa-solid fa-chevron-down ml-2 text-xs text-gray-400 hidden md:block"></i>
+                    </button>
+                    <!-- Dropdown -->
+                    <div id="user-menu" class="hidden origin-top-right absolute right-0 top-12 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-50">
+                        <div class="px-4 py-3">
+                            <p class="text-sm text-gray-900">Signed in as</p>
+                            <p class="text-sm font-medium text-gray-900 truncate" id="menu-email-display">...</p>
+                        </div>
+                        <div class="py-1">
+                            <a href="#" id="menu-profile" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa-regular fa-id-card mr-3 text-gray-400"></i>Your Profile</a>
+                            <a href="#" id="menu-change-email" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa-regular fa-envelope mr-3 text-gray-400"></i>Change Email</a>
+                        </div>
+                        <div class="py-1 px-4">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-2 mt-1">Language</p>
+                            <div class="flex items-center space-x-2 bg-gray-100 rounded p-1">
+                                <button id="lang-en" class="flex-1 text-xs font-medium bg-white text-blue-600 shadow-sm py-1 rounded text-center transition-all">English</button>
+                                <button id="lang-ne" class="flex-1 text-xs font-medium text-gray-500 hover:text-gray-700 py-1 rounded text-center transition-all">नेपाली</button>
+                            </div>
+                        </div>
+                        <div class="py-1">
+                            <a href="#" id="logout-button" class="group flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"><i class="fa-solid fa-arrow-right-from-bracket mr-3 text-red-400"></i>Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- New Grievance Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
+                    <div class="bg-blue-600 px-6 py-4"><h2 class="text-lg font-semibold text-white"><i class="fa-solid fa-pen-to-square mr-2"></i>File a New Grievance</h2></div>
+                    <div class="p-6">
+                        <form id="grievance-form" class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Ministry</label>
+                                <select id="ministry" class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"><option value="">Select a Ministry...</option></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                                <select id="department" disabled class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 bg-gray-50"><option value="">Select a Ministry first...</option></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                <input type="text" id="subject" required class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Details</label>
+                                <textarea id="details" rows="4" required class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Document (Optional)</label>
+                                <input type="file" id="document" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            </div>
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Submit Complaint</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- My Grievances -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-900">My Grievances (मेरो गुनासोहरु)</h2>
+                        <button onclick="loadMyComplaints(getAuthHeaders())" class="text-sm text-blue-600 hover:text-blue-800 font-medium"><i class="fa-solid fa-rotate-right mr-1"></i> Refresh</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Tracking ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Subject</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="grievance-table-body" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden" aria-modal="true">
+        <div class="absolute inset-0 bg-gray-500 bg-opacity-75" onclick="toggleModal('profile-modal', false)"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 p-6 relative">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Your Profile</h3>
+                <div class="space-y-3">
+                    <div><p class="text-sm text-gray-500">Name</p><p class="font-medium" id="modal-fullname">...</p></div>
+                    <div><p class="text-sm text-gray-500">Email</p><p class="font-medium" id="modal-email">...</p></div>
+                    <div><p class="text-sm text-gray-500">Role</p><p class="font-medium">Citizen</p></div>
+                </div>
+                <div class="mt-6 flex justify-end"><button onclick="toggleModal('profile-modal', false)" class="px-4 py-2 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200">Close</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Modal -->
+    <div id="email-modal" class="fixed inset-0 z-50 hidden" aria-modal="true">
+        <div class="absolute inset-0 bg-gray-500 bg-opacity-75" onclick="toggleModal('email-modal', false)"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 p-6 relative">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Change Email Address</h3>
+                <form id="email-form">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">New Email</label>
+                    <input type="email" id="new-email" required class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="toggleModal('email-modal', false)" class="px-4 py-2 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+        const userMenuBtn = document.getElementById('user-menu-button');
+        const userMenu = document.getElementById('user-menu');
+        let currentUserData = null;
+
+        function showToast(msg, err=false) {
+            Toastify({ text: msg, duration: 4000, style: { background: err ? "#ef4444" : "#10b981" } }).showToast();
+        }
+        function getAuthHeaders() {
+            const t = localStorage.getItem('accessToken');
+            if (!t) { window.location.href = 'login.html'; return null; }
+            return { 'Authorization': `Bearer ${t}` };
+        }
+        function toggleModal(id, show) { document.getElementById(id).classList.toggle('hidden', !show); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const headers = getAuthHeaders();
+            if (!headers) return;
+            loadProfile(headers);
+            loadMinistries();
+            loadMyComplaints(headers);
+
+            userMenuBtn.onclick = (e) => { e.stopPropagation(); userMenu.classList.toggle('hidden'); };
+            document.onclick = (e) => { if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) userMenu.classList.add('hidden'); };
+
+            // Modals
+            document.getElementById('menu-profile').onclick = (e) => { e.preventDefault(); toggleModal('profile-modal', true); };
+            document.getElementById('menu-change-email').onclick = (e) => { e.preventDefault(); toggleModal('email-modal', true); };
+
+            // Language
+            document.getElementById('lang-en').onclick = () => setLang('en');
+            document.getElementById('lang-ne').onclick = () => setLang('ne');
+        });
+
+        function setLang(lang) {
+            const enBtn = document.getElementById('lang-en');
+            const neBtn = document.getElementById('lang-ne');
+            if (lang === 'en') {
+                enBtn.className = "flex-1 text-xs font-medium bg-white text-blue-600 shadow-sm py-1 rounded text-center";
+                neBtn.className = "flex-1 text-xs font-medium text-gray-500 hover:text-gray-700 py-1 rounded text-center";
+            } else {
+                neBtn.className = "flex-1 text-xs font-medium bg-white text-blue-600 shadow-sm py-1 rounded text-center";
+                enBtn.className = "flex-1 text-xs font-medium text-gray-500 hover:text-gray-700 py-1 rounded text-center";
+            }
+            showToast(lang === 'en' ? "Language set to English" : "Language set to Nepali");
+        }
+
+        async function loadProfile(h) {
+            try {
+                const res = await fetch(`${API_URL}/profile/`, { headers: h });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                currentUserData = data;
+
+                // Name Handling
+                let name = data.first_name || (data.user && data.user.first_name) || (data.user && data.user.username) || 'Citizen';
+                document.getElementById('user-name-display').textContent = name;
+
+                // Email Handling
+                let email = data.email || (data.user && data.user.email) || '';
+                document.getElementById('menu-email-display').textContent = email;
+
+                // Modal
+                document.getElementById('modal-fullname').textContent = name + (data.last_name ? ' ' + data.last_name : '');
+                document.getElementById('modal-email').textContent = email;
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadMinistries() {
+            try {
+                const res = await fetch(`${API_URL}/ministries/`);
+                const data = await res.json();
+                const sel = document.getElementById('ministry');
+                sel.innerHTML = '<option value="">Select a Ministry...</option>';
+                // Handle Pagination if present, else Array
+                const list = data.results || data;
+                list.forEach(m => sel.innerHTML += `<option value="${m.id}">${m.name}</option>`);
+            } catch(e) { console.error(e); }
+        }
+
+        document.getElementById('ministry').onchange = async function() {
+            const id = this.value;
+            const dept = document.getElementById('department');
+            dept.innerHTML = '<option>Loading...</option>'; dept.disabled = true;
+            if(!id) return;
+            const res = await fetch(`${API_URL}/departments/?ministry_id=${id}`);
+            const data = await res.json();
+            const list = data.results || data;
+            dept.innerHTML = '<option value="">Select Department...</option>';
+            list.forEach(d => dept.innerHTML += `<option value="${d.id}">${d.name}</option>`);
+            dept.disabled = false;
+        };
+
+        async function loadMyComplaints(h) {
+            const tbody = document.getElementById('grievance-table-body');
+            try {
+                const res = await fetch(`${API_URL}/complaints/`, { headers: h });
+                const data = await res.json();
+                // FIX FOR "Failed to load" -> Handle Pagination
+                const list = data.results || data;
+
+                tbody.innerHTML = '';
+                if (!list.length) { tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No grievances found.</td></tr>'; return; }
+
+                list.forEach(c => {
+                    let color = 'bg-gray-100 text-gray-800';
+                    if (c.status === 'RESOLVED') color = 'bg-green-100 text-green-800';
+                    if (c.status === 'IN_PROGRESS') color = 'bg-yellow-100 text-yellow-800';
+                    const row = `<tr class="hover:bg-gray-50"><td class="px-6 py-4 text-sm font-mono text-blue-600">${c.tracking_id.substring(0,8)}...</td><td class="px-6 py-4 text-sm font-medium text-gray-900">${c.title}</td><td class="px-6 py-4"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${color}">${c.status}</span></td><td class="px-6 py-4 text-sm text-gray-500">${new Date(c.created_at).toLocaleDateString()}</td></tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">Failed to load grievances.</td></tr>';
+            }
+        }
+
+        document.getElementById('grievance-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button'); btn.disabled=true; btn.innerText='Submitting...';
+            const fd = new FormData(this);
+            fd.append('title', document.getElementById('subject').value);
+            fd.append('description', document.getElementById('details').value);
+            fd.append('ministry_id', document.getElementById('ministry').value);
+            fd.append('department_id', document.getElementById('department').value);
+
+            try {
+                const res = await fetch(`${API_URL}/complaints/`, { method:'POST', headers: getAuthHeaders(), body: fd });
+                if(!res.ok) throw new Error();
+                showToast('Submitted successfully!');
+                this.reset();
+                loadMyComplaints(getAuthHeaders());
+            } catch(e) { showToast('Error submitting', true); }
+            btn.disabled=false; btn.innerText='Submit Complaint';
+        };
+
+        // Update Email Logic
+        document.getElementById('email-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const newEmail = document.getElementById('new-email').value;
+            try {
+                const res = await fetch(`${API_URL}/profile/`, {
+                    method: 'PATCH',
+                    headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user: { email: newEmail } })
+                });
+                if(!res.ok) throw new Error();
+                showToast('Email updated successfully!');
+                toggleModal('email-modal', false);
+                loadProfile(getAuthHeaders());
+            } catch(e) { showToast('Failed to update email', true); }
+        };
+
+        document.getElementById('logout-button').onclick = () => {
+            localStorage.clear(); window.location.href='login.html';
+        };
+    </script>
+</body>
+</html>

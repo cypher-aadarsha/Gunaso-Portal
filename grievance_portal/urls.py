@@ -3,25 +3,28 @@ Main URL configuration for the grievance_portal project.
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
+
+# --- THIS IS THE FIX ---
+# Import the JWT token views that were missing
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 urlpatterns = [
-    # 1. The Django admin site (e.g., /admin/)
+    # 1. Admin Panel
     path('admin/', admin.site.urls),
 
-    # 2. Your API endpoints
-    # This is the most important line. It tells Django:
-    # "For any URL that starts with 'api/', go look at the
-    # 'complaints.urls' file for more instructions."
+    # 2. API URLs
+    # All URLs from the 'complaints' app will be prefixed with 'api/'
+    # e.g., /api/complaints/, /api/register/, /api/profile/
     path('api/', include('complaints.urls')),
 
-    # You can add other paths here later, e.g., for your frontend
-    # path('', include('frontend.urls')),
-]
+    # 3. Built-in JWT Token Authentication (THESE LINES WERE MISSING)
+    # The login.html page will send its request to this URL
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-# This is a helper for development.
-# It tells Django to serve user-uploaded files (like documents)
-# from your MEDIA_ROOT folder when you are in DEBUG mode.
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # 4. API Auth (for login/logout buttons in browsable API)
+    path('api-auth/', include('rest_framework.urls')),
+]

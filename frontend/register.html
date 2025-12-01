@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gunaso Portal - Create Account</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Toastify.js CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Toastify.js Script -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="max-w-4xl w-full mx-4 bg-white shadow-2xl rounded-lg overflow-hidden flex flex-col md:flex-row">
+
+            <!-- Left Side: Branding -->
+            <div class="w-full md:w-1/2 bg-blue-600 p-8 md:p-12 text-white flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center mb-6">
+                        <svg class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.866 10.211 9 11.896 5.134-1.685 9-6.305 9-11.896a12.02 12.02 0 00-1.05-4.016z" />
+                        </svg>
+                        <span class="ml-3 text-2xl font-bold">Gunaso Portal</span>
+                    </div>
+                    <h1 class="text-4xl font-bold mb-4">A Single Platform for Your Voice.</h1>
+                    <p class="text-blue-100 text-lg">Securely file complaints and track their status in real-time. We are committed to transparency and accountability.</p>
+                </div>
+                <div class="mt-8">
+                    <img src="images/Govt Logo.jpeg" alt="Official Portal Graphic" class="rounded-lg w-full h-auto object-cover opacity-90">
+                </div>
+            </div>
+
+            <!-- Right Side: Registration Form -->
+            <div class="w-full md:w-1/2 p-8 md:p-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Create Your Account</h2>
+                <p class="text-gray-600 mb-6">
+                    Already have an account?
+                    <a href="login.html" class="font-medium text-blue-600 hover:text-blue-500">Log in</a>
+                </p>
+
+                <!-- Error Display Area -->
+                <div id="error-container" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">
+                    <strong class="font-bold">Please correct the following errors:</strong>
+                    <ul id="error-list" class="mt-2 list-disc list-inside">
+                        <!-- Errors will be populated by JS -->
+                    </ul>
+                </div>
+
+                <form id="registerForm" class="space-y-5">
+                    <div class="flex flex-col md:flex-row md:space-x-4">
+                        <div class="w-full md:w-1/2">
+                            <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
+                            <input type="text" name="first_name" id="first_name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="w-full md:w-1/2 mt-5 md:mt-0">
+                            <label for="last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
+                            <input type="text" name="last_name" id="last_name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" name="username" id="username" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <input type="email" name="email" id="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" name="password" id="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="password2" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                        <input type="password" name="password2" id="password2" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="government_id_document" class="block text-sm font-medium text-gray-700">Government ID (Citizenship, etc.)</label>
+                        <input type="file"
+                               name="government_id_document"
+                               id="government_id_document"
+                               required
+                               accept="image/png, image/jpeg, image/jpg"
+                               class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        <p class="mt-1 text-xs text-gray-500">PNG, JPG, or JPEG only. Max file size: 1.5 MB.</p>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_URL = 'http://127.0.0.1:8000/api';
+
+        // Get DOM Elements
+        const registerForm = document.getElementById('registerForm');
+        const errorContainer = document.getElementById('error-container');
+        const errorList = document.getElementById('error-list');
+        const idDocumentInput = document.getElementById('government_id_document');
+
+        // --- Helper Function for Clean Notifications ---
+        function showToast(message, isError = false) {
+            Toastify({
+                text: message,
+                duration: 5000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
+                style: {
+                    background: isError ? "#ef4444" : "#22c55e", // Red for error, Green for success
+                    borderRadius: "0.5rem",
+                    fontWeight: "500"
+                }
+            }).showToast();
+        }
+
+        // --- Helper to show form errors ---
+        function showErrors(errors) {
+            errorContainer.classList.remove('hidden');
+            errorList.innerHTML = ''; // Clear old errors
+
+            // Loop through the error object from Django
+            for (const field in errors) {
+                const errorMessages = errors[field]; // This is an array of errors for one field
+                errorMessages.forEach(message => {
+                    const li = document.createElement('li');
+
+                    // Make field name more readable
+                    const fieldName = field.replace(/_/g, ' ').replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+
+                    li.textContent = `${fieldName}: ${message}`;
+                    errorList.appendChild(li);
+                });
+            }
+        }
+
+        // --- Form Submission Logic ---
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Stop the form from reloading the page
+            errorContainer.classList.add('hidden'); // Hide old errors
+
+            const submitButton = registerForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Creating Account...';
+
+            // --- Client-side File Size Check ---
+            const file = idDocumentInput.files[0];
+            const MAX_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
+
+            if (file && file.size > MAX_SIZE) {
+                showErrors({ 'government_id_document': [`File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max size is 1.5 MB.`] });
+                submitButton.disabled = false;
+                submitButton.textContent = 'Create Account';
+                return;
+            }
+
+            // Create FormData from the form
+            // Because the <input> now has name="government_id_document", this works.
+            const formData = new FormData(registerForm);
+
+            try {
+                const response = await fetch(`${API_URL}/register/`, {
+                    method: 'POST',
+                    // No 'Content-Type' header needed, browser sets it for FormData
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // If response is not 2xx, it's an error
+                    console.error('Registration error:', data);
+                    showErrors(data); // Show errors from Django
+                } else {
+                    // Success!
+                    showToast('Account created successfully! Please log in.', false);
+                    // Redirect to login page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                }
+
+            } catch (error) {
+                console.error('Network or server error:', error);
+                showErrors({ 'Server': ['Could not connect to the server. Please try again later.'] });
+            } finally {
+                // Re-enable the button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Create Account';
+            }
+        });
+    </script>
+</body>
+</html>
