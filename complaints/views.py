@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.response import Response
-from rest_framework.decorators import action # <-- Added this
+from rest_framework.decorators import action
 
 # Import all models and serializers
 from .models import Ministry, Department, Complaint, ComplaintUpdate, UserProfile
@@ -60,7 +60,10 @@ class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
 class ComplaintViewSet(viewsets.ModelViewSet):
     queryset = Complaint.objects.all()
     serializer_class = ComplaintSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
+
+    # FIXED: Permission now allows Owner OR Ministry Admin to access/edit
+    permission_classes = [permissions.IsAuthenticated, (IsOwnerOrAdmin | IsMinistryAdmin)]
+
     lookup_field = 'tracking_id'
 
     def get_queryset(self):
@@ -86,14 +89,12 @@ class ComplaintViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
-    # --- NEW: Analytics Endpoint ---
     @action(detail=False, methods=['get'])
     def stats(self, request):
         """
         Returns counts of complaints by status.
         URL: /api/complaints/stats/
         """
-        # We reuse get_queryset() so it automatically filters by Ministry or PMO
         queryset = self.filter_queryset(self.get_queryset())
 
         total = queryset.count()

@@ -15,7 +15,12 @@
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom Scrollbar for Notification Dropdown */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -35,16 +40,32 @@
 
                 <!-- Right Side: Notifications & Logout -->
                 <div class="flex items-center space-x-6">
-                    <!-- Notification Bell -->
-                    <div class="relative cursor-pointer group">
-                        <i class="fa-regular fa-bell text-gray-500 text-xl group-hover:text-blue-600 transition"></i>
-                        <!-- Badge -->
-                        <span id="notification-badge" class="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white opacity-0 transition-opacity duration-300">
-                            0
-                        </span>
-                        <!-- Tooltip -->
-                        <div class="absolute right-0 top-8 w-48 bg-white border border-gray-100 shadow-lg rounded-md p-3 hidden group-hover:block z-50">
-                            <p class="text-xs text-gray-500 font-semibold" id="notification-text">No new items</p>
+                    
+                    <!-- UPDATED: Notification Bell -->
+                    <div class="relative cursor-pointer" id="notification-container">
+                        <div onclick="toggleNotifications()" class="relative p-2 hover:bg-gray-100 rounded-full transition">
+                            <i class="fa-regular fa-bell text-gray-600 text-xl"></i>
+                            <!-- Badge -->
+                            <span id="notification-badge" class="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white opacity-0 transition-opacity duration-300 shadow-sm border border-white">
+                                0
+                            </span>
+                        </div>
+
+                        <!-- Dropdown Menu -->
+                        <div id="notification-dropdown" class="absolute right-0 top-12 w-80 bg-white border border-gray-100 shadow-xl rounded-xl hidden z-50 overflow-hidden ring-1 ring-black ring-opacity-5">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                <h3 class="text-sm font-bold text-gray-900">Notifications</h3>
+                                <button onclick="markAllAsRead()" class="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline">Mark all as read</button>
+                            </div>
+                            <div id="notification-list" class="max-h-80 overflow-y-auto">
+                                <!-- Items injected here -->
+                                <div class="p-8 text-center text-gray-400 text-sm">
+                                    No new notifications
+                                </div>
+                            </div>
+                            <div class="p-2 border-t border-gray-100 bg-gray-50 text-center">
+                                <span class="text-xs text-gray-400">Real-time updates</span>
+                            </div>
                         </div>
                     </div>
 
@@ -170,7 +191,7 @@
 
     <!-- === MODALS === -->
 
-    <!-- 1. Detailed View Modal (NEW) -->
+    <!-- 1. Detailed View Modal (ENHANCED) -->
     <div id="details-modal" class="fixed inset-0 z-50 hidden" aria-modal="true">
         <div class="absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()"></div>
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -229,7 +250,7 @@
                         </div>
                     </div>
 
-                    <!-- Attachments -->
+                    <!-- Attachments (ENHANCED) -->
                     <div class="mb-6" id="attachment-section">
                         <h4 class="text-sm font-bold text-gray-900 mb-2">Supporting Documents</h4>
                         <div id="detail-attachment-container">
@@ -250,7 +271,7 @@
         </div>
     </div>
 
-    <!-- 2. Update Status Modal (Existing but styled) -->
+    <!-- 2. Update Status Modal -->
     <div id="status-modal" class="fixed inset-0 z-[60] hidden" aria-modal="true">
         <div class="absolute inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm" onclick="closeStatusModal()"></div>
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -285,8 +306,8 @@
         const API_URL = 'http://127.0.0.1:8000/api';
         let currentRole = 'ADMIN';
         let selectedComplaintId = null;
-        let complaintsData = []; // Store fetched data locally
-        let statusChart = null;  // Store chart instance
+        let complaintsData = [];
+        let statusChart = null;
 
         const token = localStorage.getItem('accessToken');
         if (!token) window.location.href = 'login.html';
@@ -296,9 +317,18 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadProfile();
             await loadDashboardData();
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const container = document.getElementById('notification-container');
+                const dropdown = document.getElementById('notification-dropdown');
+                if (!container.contains(event.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
         });
 
-        // --- 1. CORE DATA LOADING ---
+        // --- CORE & ANALYTICS ---
         async function loadProfile() {
             try {
                 const res = await fetch(`${API_URL}/profile/`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -306,13 +336,10 @@
                 const profile = await res.json();
                 
                 if (profile.role === 'CITIZEN') { window.location.href = 'index.html'; return; }
-
                 currentRole = profile.role;
                 document.getElementById('welcome-msg').textContent = `Welcome, ${profile.first_name || profile.username}`;
-
                 const badge = document.getElementById('ministry-badge');
                 badge.classList.remove('hidden');
-                
                 if (currentRole === 'SUPER' || (profile.user && profile.user.is_superuser)) {
                     badge.textContent = "PMO / Super Admin";
                     badge.className = "ml-4 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200";
@@ -321,54 +348,29 @@
                 } else {
                     badge.textContent = profile.ministry || "Ministry Admin";
                 }
-            } catch (e) {
-                console.error(e);
-                window.location.href = 'login.html';
-            }
+            } catch (e) { window.location.href = 'login.html'; }
         }
 
         async function loadDashboardData() {
-            // Fetch Stats and Complaints in parallel
             await Promise.all([loadStats(), loadComplaints()]);
         }
 
-        // --- 2. ANALYTICS (NEW) ---
         async function loadStats() {
             try {
-                // Fetch stats from the new endpoint
                 const res = await fetch(`${API_URL}/complaints/stats/`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const stats = await res.json();
-
-                // Update Cards
+                
                 animateValue("stat-total", parseInt(document.getElementById("stat-total").innerText), stats.total, 1000);
                 animateValue("stat-resolved", parseInt(document.getElementById("stat-resolved").innerText), stats.resolved, 1000);
                 animateValue("stat-pending", parseInt(document.getElementById("stat-pending").innerText), stats.pending, 1000);
-
-                // Update Notifications Badge
-                const badge = document.getElementById('notification-badge');
-                const tooltip = document.getElementById('notification-text');
                 
-                if (stats.pending > 0) {
-                    badge.textContent = stats.pending > 99 ? '99+' : stats.pending;
-                    badge.classList.remove('opacity-0');
-                    tooltip.textContent = `${stats.pending} complaints require attention`;
-                } else {
-                    badge.classList.add('opacity-0');
-                    tooltip.textContent = "All caught up!";
-                }
-
-                // Render Chart
                 renderChart(stats);
-
-            } catch (e) { console.error("Stats error", e); }
+            } catch (e) {}
         }
 
         function renderChart(stats) {
             const ctx = document.getElementById('statusChart').getContext('2d');
-            
-            // Destroy previous chart if exists to prevent memory leaks/glitches
             if (statusChart) statusChart.destroy();
-
             statusChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -380,25 +382,11 @@
                         hoverOffset: 4
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }, // Hide default legend to save space
-                        tooltip: { 
-                            callbacks: {
-                                label: function(context) {
-                                    return ` ${context.label}: ${context.raw}`;
-                                }
-                            }
-                        }
-                    },
-                    cutout: '70%' // Thinner ring
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
             });
         }
 
-        // --- 3. COMPLAINTS TABLE ---
+        // --- COMPLAINTS & NOTIFICATIONS ---
         async function loadComplaints() {
             const tbody = document.getElementById('complaints-table-body');
             tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500"><i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2 text-blue-500"></i><br>Updating data...</td></tr>';
@@ -407,15 +395,15 @@
                 const res = await fetch(`${API_URL}/complaints/`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const data = await res.json();
                 let complaints = data.results || data;
-                
-                // PMO Client-side filter
+
                 const ministryFilter = document.getElementById('ministry-filter')?.value;
                 if (currentRole === 'SUPER' && ministryFilter) {
                     complaints = complaints.filter(c => c.ministry === ministryFilter || c.ministry_id == ministryFilter);
                 }
 
-                complaintsData = complaints; // Save for modal usage
+                complaintsData = complaints;
                 renderTable(complaints);
+                updateNotifications(complaints);
 
             } catch (e) {
                 tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Failed to load data.</td></tr>';
@@ -425,88 +413,125 @@
         function renderTable(complaints) {
             const tbody = document.getElementById('complaints-table-body');
             tbody.innerHTML = '';
-
-            if (!complaints.length) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400 font-medium">No grievances found.</td></tr>';
-                return;
-            }
-
+            if (!complaints.length) { tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400 font-medium">No grievances found.</td></tr>'; return; }
+            
             complaints.forEach(c => {
-                // Priority Styles
-                const pColor = c.ai_suggested_priority === 'HIGH' ? 'bg-red-100 text-red-700 border-red-200' : 
-                              (c.ai_suggested_priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-gray-100 text-gray-600 border-gray-200');
-                
-                // Status Styles
+                const pColor = c.ai_suggested_priority === 'HIGH' ? 'bg-red-100 text-red-700 border-red-200' : (c.ai_suggested_priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-gray-100 text-gray-600 border-gray-200');
                 let sColor = 'bg-gray-100 text-gray-800';
                 if(c.status === 'RESOLVED') sColor = 'bg-green-100 text-green-700';
                 if(c.status === 'IN_PROGRESS') sColor = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
                 if(c.status === 'REJECTED') sColor = 'bg-red-50 text-red-700 border border-red-200';
 
-                const row = `
+                tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition border-b border-gray-50 last:border-0">
                         <td class="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-500">#${c.tracking_id.substring(0,6)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">${c.title}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                            <i class="fa-solid fa-wand-magic-sparkles text-purple-400 mr-1"></i> ${c.ai_suggested_category || 'N/A'}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wide ${pColor}">${c.ai_suggested_priority || 'LOW'}</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${sColor}">${c.status.replace('_', ' ')}</span>
-                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500"><i class="fa-solid fa-wand-magic-sparkles text-purple-400 mr-1"></i> ${c.ai_suggested_category || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wide ${pColor}">${c.ai_suggested_priority || 'LOW'}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${sColor}">${c.status.replace('_', ' ')}</span></td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <!-- View Details Button -->
-                            <button onclick="openDetailsModal('${c.tracking_id}')" class="text-gray-500 hover:text-blue-600 transition bg-white border border-gray-200 hover:border-blue-300 p-1.5 rounded-md shadow-sm" title="View Details">
-                                <i class="fa-regular fa-eye"></i>
-                            </button>
-                            <!-- Quick Update Button -->
-                            <button onclick="openStatusModal('${c.tracking_id}', '${c.status}')" class="text-gray-500 hover:text-green-600 transition bg-white border border-gray-200 hover:border-green-300 p-1.5 rounded-md shadow-sm" title="Update Status">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
+                            <button onclick="openDetailsModal('${c.tracking_id}')" class="text-gray-500 hover:text-blue-600 transition bg-white border border-gray-200 hover:border-blue-300 p-1.5 rounded-md shadow-sm" title="View Details"><i class="fa-regular fa-eye"></i></button>
+                            <button onclick="openStatusModal('${c.tracking_id}', '${c.status}')" class="text-gray-500 hover:text-green-600 transition bg-white border border-gray-200 hover:border-green-300 p-1.5 rounded-md shadow-sm" title="Update Status"><i class="fa-solid fa-pen"></i></button>
                         </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+                    </tr>`;
             });
         }
 
-        // --- 4. DETAILS MODAL LOGIC (NEW) ---
+        // --- NOTIFICATION LOGIC (NEW) ---
+        function updateNotifications(complaints) {
+            const pending = complaints.filter(c => c.status === 'PENDING');
+            const list = document.getElementById('notification-list');
+            const badge = document.getElementById('notification-badge');
+            
+            // Local Storage check for "Read" items
+            const seenIds = JSON.parse(localStorage.getItem('seen_complaints') || '[]');
+            const unseenCount = pending.filter(c => !seenIds.includes(c.tracking_id)).length;
+
+            if (unseenCount > 0) {
+                badge.textContent = unseenCount > 9 ? '9+' : unseenCount;
+                badge.classList.remove('opacity-0');
+            } else {
+                badge.classList.add('opacity-0');
+            }
+
+            list.innerHTML = '';
+            if (pending.length === 0) {
+                list.innerHTML = '<div class="p-8 text-center text-gray-400 text-sm">No new notifications</div>';
+            } else {
+                pending.forEach(c => {
+                    const isUnread = !seenIds.includes(c.tracking_id);
+                    const bgClass = isUnread ? 'bg-blue-50' : 'bg-white';
+                    const dot = isUnread ? '<div class="h-2 w-2 bg-blue-500 rounded-full mr-3"></div>' : '';
+                    
+                    list.innerHTML += `
+                        <div class="${bgClass} p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer flex items-center" onclick="openDetailsModal('${c.tracking_id}')">
+                            ${dot}
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-gray-800 truncate">${c.title}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">ID: ${c.tracking_id.substring(0,8)}... • ${new Date(c.created_at).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function toggleNotifications() {
+            document.getElementById('notification-dropdown').classList.toggle('hidden');
+        }
+
+        function markAllAsRead() {
+            // Get all pending IDs and save to localStorage
+            const pendingIds = complaintsData.filter(c => c.status === 'PENDING').map(c => c.tracking_id);
+            localStorage.setItem('seen_complaints', JSON.stringify(pendingIds));
+            
+            // Refresh UI
+            updateNotifications(complaintsData);
+            Toastify({ text: "All marked as read", style: { background: "#6b7280" }, duration: 2000 }).showToast();
+        }
+
+        // --- ENHANCED DETAILS MODAL ---
         function openDetailsModal(id) {
             const complaint = complaintsData.find(c => c.tracking_id === id);
             if (!complaint) return;
 
-            // Populate Fields
             document.getElementById('detail-title').textContent = complaint.title;
             document.getElementById('detail-id').textContent = `Tracking ID: ${complaint.tracking_id}`;
             document.getElementById('detail-desc').textContent = complaint.description;
-            
-            // AI Fields
-            const catEl = document.getElementById('detail-category');
-            catEl.textContent = complaint.ai_suggested_category || 'Uncategorized';
-            
-            const prioEl = document.getElementById('detail-priority');
-            prioEl.textContent = complaint.ai_suggested_priority || 'LOW';
-            prioEl.className = complaint.ai_suggested_priority === 'HIGH' ? 'text-red-600 font-bold' : 'font-bold text-gray-900';
+            document.getElementById('detail-category').textContent = complaint.ai_suggested_category || 'Uncategorized';
+            document.getElementById('detail-priority').textContent = complaint.ai_suggested_priority || 'LOW';
+            document.getElementById('detail-priority').className = complaint.ai_suggested_priority === 'HIGH' ? 'text-red-600 font-bold' : 'font-bold text-gray-900';
 
-            // User Info (Safe access)
             const user = complaint.created_by || {};
             document.getElementById('detail-user').textContent = `${user.first_name || ''} ${user.last_name || user.username || 'Unknown'}`;
             document.getElementById('detail-email').textContent = user.email || 'N/A';
 
-            // Attachment Handling
+            // Attachment Handling with Icons
             const attachContainer = document.getElementById('detail-attachment-container');
             if (complaint.attachment) {
-                // Check if image
-                const isImg = complaint.attachment.match(/\.(jpeg|jpg|png|gif)$/i);
+                const fileUrl = complaint.attachment;
+                const ext = fileUrl.split('.').pop().toLowerCase();
+                let iconClass = 'fa-file';
+                let iconColor = 'text-gray-500';
+                let previewHtml = '';
+
+                if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                    iconClass = 'fa-image'; iconColor = 'text-blue-500';
+                    previewHtml = `<img src="${fileUrl}" class="h-16 w-16 object-cover rounded border border-gray-200 ml-3 cursor-pointer hover:opacity-90" onclick="window.open('${fileUrl}')">`;
+                } else if (ext === 'pdf') {
+                    iconClass = 'fa-file-pdf'; iconColor = 'text-red-500';
+                } else if (['doc', 'docx'].includes(ext)) {
+                    iconClass = 'fa-file-word'; iconColor = 'text-blue-700';
+                }
+
                 attachContainer.innerHTML = `
-                    <div class="flex items-center p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                        <div class="mr-3 text-blue-500 text-2xl"><i class="fa-solid ${isImg ? 'fa-image' : 'fa-file-pdf'}"></i></div>
+                    <div class="flex items-center p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition">
+                        <div class="mr-3 ${iconColor} text-3xl"><i class="fa-solid ${iconClass}"></i></div>
                         <div class="flex-1 overflow-hidden">
-                            <p class="text-sm font-medium text-gray-900 truncate">Attached Document</p>
-                            <a href="${complaint.attachment}" target="_blank" class="text-xs text-blue-600 hover:underline">Download / View</a>
+                            <p class="text-sm font-medium text-gray-900 truncate">Supporting Document.${ext}</p>
+                            <a href="${fileUrl}" target="_blank" class="text-xs text-blue-600 hover:underline font-medium">Download / View File</a>
                         </div>
-                        ${isImg ? `<img src="${complaint.attachment}" class="h-10 w-10 object-cover rounded border border-gray-200 ml-2">` : ''}
+                        ${previewHtml}
                     </div>
                 `;
                 document.getElementById('attachment-section').classList.remove('hidden');
@@ -514,91 +539,47 @@
                 document.getElementById('attachment-section').classList.add('hidden');
             }
 
-            // Setup "Update" button inside detail modal
-            document.getElementById('btn-open-update').onclick = () => {
-                closeDetailsModal();
-                openStatusModal(complaint.tracking_id, complaint.status);
-            };
-
+            document.getElementById('btn-open-update').onclick = () => { closeDetailsModal(); openStatusModal(complaint.tracking_id, complaint.status); };
             document.getElementById('details-modal').classList.remove('hidden');
+            // Hide notification dropdown if open
+            document.getElementById('notification-dropdown').classList.add('hidden');
         }
 
-        function closeDetailsModal() {
-            document.getElementById('details-modal').classList.add('hidden');
-        }
+        function closeDetailsModal() { document.getElementById('details-modal').classList.add('hidden'); }
 
-        // --- 5. UPDATE STATUS LOGIC ---
+        // --- UPDATE STATUS LOGIC ---
         function openStatusModal(id, currentStatus) {
             selectedComplaintId = id;
             document.getElementById('update-status-select').value = currentStatus;
             document.getElementById('status-modal').classList.remove('hidden');
         }
-
-        function closeStatusModal() {
-            document.getElementById('status-modal').classList.add('hidden');
-            selectedComplaintId = null;
-        }
-
+        function closeStatusModal() { document.getElementById('status-modal').classList.add('hidden'); selectedComplaintId = null; }
+        
         async function submitStatusUpdate() {
             if (!selectedComplaintId) return;
             const newStatus = document.getElementById('update-status-select').value;
             const remarks = document.getElementById('update-remarks').value;
-
             try {
-                // Update Complaint Status
-                await fetch(`${API_URL}/complaints/${selectedComplaintId}/`, {
-                    method: 'PATCH',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus })
-                });
-
-                // Add Remarks
-                if (remarks.trim()) {
-                    await fetch(`${API_URL}/complaint-updates/`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ complaint_id: selectedComplaintId, update_text: `[Admin Status Update]: ${remarks}` })
-                    });
-                }
-
+                await fetch(`${API_URL}/complaints/${selectedComplaintId}/`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) });
+                if (remarks.trim()) { await fetch(`${API_URL}/complaint-updates/`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ complaint_id: selectedComplaintId, update_text: `[Admin Status Update]: ${remarks}` }) }); }
                 Toastify({ text: "Updated successfully", style: { background: "#10b981" } }).showToast();
                 closeStatusModal();
-                loadDashboardData(); // Refresh everything
-
-            } catch (e) {
-                Toastify({ text: "Update failed", style: { background: "#ef4444" } }).showToast();
-            }
+                loadDashboardData();
+            } catch (e) { Toastify({ text: "Update failed", style: { background: "#ef4444" } }).showToast(); }
         }
 
-        // --- UTILS ---
         function animateValue(id, start, end, duration) {
             if (start === end) return;
-            const range = end - start;
-            const obj = document.getElementById(id);
-            let startTime = null;
-            
-            function step(timestamp) {
-                if (!startTime) startTime = timestamp;
-                const progress = Math.min((timestamp - startTime) / duration, 1);
-                obj.innerHTML = Math.floor(progress * range + start);
-                if (progress < 1) window.requestAnimationFrame(step);
-            }
+            const range = end - start; const obj = document.getElementById(id); let startTime = null;
+            function step(timestamp) { if (!startTime) startTime = timestamp; const progress = Math.min((timestamp - startTime) / duration, 1); obj.innerHTML = Math.floor(progress * range + start); if (progress < 1) window.requestAnimationFrame(step); }
             window.requestAnimationFrame(step);
         }
 
         async function loadMinistriesList() {
-            try {
-                const res = await fetch(`${API_URL}/ministries/`);
-                const data = await res.json();
-                const sel = document.getElementById('ministry-filter');
-                (data.results || data).forEach(m => sel.innerHTML += `<option value="${m.name}">${m.name}</option>`);
-            } catch(e){}
+            try { const res = await fetch(`${API_URL}/ministries/`); const data = await res.json(); const sel = document.getElementById('ministry-filter'); (data.results || data).forEach(m => sel.innerHTML += `<option value="${m.name}">${m.name}</option>`); } catch(e){}
         }
 
-        function handleLogout() {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }
+        function handleLogout() { localStorage.clear(); window.location.href = 'login.html'; }
     </script>
 </body>
 </html>

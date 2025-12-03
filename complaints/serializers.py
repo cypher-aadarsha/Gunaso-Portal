@@ -102,8 +102,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 class ComplaintUpdateSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
-    # FIX: Added complaint_id field so the serializer accepts it from the frontend
-    # This maps the incoming 'complaint_id' to the model's 'complaint' relationship
     complaint_id = serializers.PrimaryKeyRelatedField(
         queryset=Complaint.objects.all(),
         source='complaint',
@@ -132,5 +130,17 @@ class ComplaintSerializer(serializers.ModelSerializer):
             'created_by', 'ministry', 'department', 'ministry_id', 'department_id',
             'attachment', 'updates', 'ai_suggested_category', 'ai_suggested_priority',
         ]
+        # FIXED: Removed 'status' from read_only_fields so Admins can update it.
         read_only_fields = ('tracking_id', 'created_at', 'updated_at', 'created_by',
-                            'updates', 'status', 'ai_suggested_category', 'ai_suggested_priority')
+                            'updates', 'ai_suggested_category', 'ai_suggested_priority')
+
+    def __init__(self, *args, **kwargs):
+        """
+        Dynamic check: Make 'status' read-only for CITIZENS, but writable for ADMINS.
+        """
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+
+        # If the user is a CITIZEN, they cannot change the status.
+        if request and hasattr(request.user, 'profile') and request.user.profile.role == 'CITIZEN':
+            self.fields['status'].read_only = True
