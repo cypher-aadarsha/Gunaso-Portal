@@ -10,7 +10,6 @@ from .models import Complaint, Ministry, Department, ComplaintUpdate, UserProfil
 class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for the UserProfile model.
-    Now supports updating User details (email, names).
     """
     first_name = serializers.CharField(source='user.first_name', required=False)
     last_name = serializers.CharField(source='user.last_name', required=False)
@@ -18,27 +17,20 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['user', 'role', 'ministry', 'department', 'government_id_document', 'first_name', 'last_name',
+        # Added 'phone_number' to fields
+        fields = ['user', 'role', 'phone_number', 'ministry', 'department', 'government_id_document', 'first_name', 'last_name',
                   'email']
         read_only_fields = ['user', 'role', 'ministry', 'department', 'government_id_document']
 
     def update(self, instance, validated_data):
-        # Extract the user data (email, first_name, etc.)
         user_data = validated_data.pop('user', {})
-
         user = instance.user
 
-        # Update User fields if provided
-        if 'email' in user_data:
-            user.email = user_data['email']
-        if 'first_name' in user_data:
-            user.first_name = user_data['first_name']
-        if 'last_name' in user_data:
-            user.last_name = user_data['last_name']
-
+        if 'email' in user_data: user.email = user_data['email']
+        if 'first_name' in user_data: user.first_name = user_data['first_name']
+        if 'last_name' in user_data: user.last_name = user_data['last_name']
         user.save()
 
-        # Update any remaining Profile fields
         return super().update(instance, validated_data)
 
 
@@ -48,10 +40,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     government_id_document = serializers.FileField(required=True, write_only=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
+    # NEW: Phone number is explicitly required here
+    phone_number = serializers.CharField(required=True, write_only=True, max_length=15)
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name', 'government_id_document')
+        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name', 'phone_number', 'government_id_document')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
@@ -61,6 +55,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         government_id_document = validated_data.pop('government_id_document')
+        phone_number = validated_data.pop('phone_number')
         first_name = validated_data.pop('first_name')
         last_name = validated_data.pop('last_name')
 
@@ -72,9 +67,11 @@ class RegisterSerializer(serializers.ModelSerializer):
                 first_name=first_name,
                 last_name=last_name
             )
+            # Create profile with phone number
             UserProfile.objects.create(
                 user=user,
                 government_id_document=government_id_document,
+                phone_number=phone_number,
                 role='CITIZEN'
             )
         return user
@@ -130,17 +127,11 @@ class ComplaintSerializer(serializers.ModelSerializer):
             'created_by', 'ministry', 'department', 'ministry_id', 'department_id',
             'attachment', 'updates', 'ai_suggested_category', 'ai_suggested_priority',
         ]
-        # FIXED: Removed 'status' from read_only_fields so Admins can update it.
         read_only_fields = ('tracking_id', 'created_at', 'updated_at', 'created_by',
                             'updates', 'ai_suggested_category', 'ai_suggested_priority')
 
     def __init__(self, *args, **kwargs):
-        """
-        Dynamic check: Make 'status' read-only for CITIZENS, but writable for ADMINS.
-        """
         super().__init__(*args, **kwargs)
         request = self.context.get('request')
-
-        # If the user is a CITIZEN, they cannot change the status.
         if request and hasattr(request.user, 'profile') and request.user.profile.role == 'CITIZEN':
             self.fields['status'].read_only = True

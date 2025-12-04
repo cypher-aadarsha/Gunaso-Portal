@@ -10,7 +10,6 @@ from django.dispatch import receiver
 class Ministry(models.Model):
     """
     Represents a government ministry.
-    e.g., "Ministry of Finance", "Ministry of Health"
     """
     name = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -22,54 +21,45 @@ class Ministry(models.Model):
 class Department(models.Model):
     """
     Represents a specific department or office within a ministry.
-    e.g., "Tax Office" (under Ministry of Finance)
     """
     ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='departments')
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('ministry', 'name')  # No two depts in one ministry can have same name
+        unique_together = ('ministry', 'name')
 
     def __str__(self):
         return f"{self.name} ({self.ministry.name})"
 
 
-# --- User Profile Model (CRITICAL) ---
+# --- User Profile Model (UPDATED) ---
 
 def get_id_document_upload_path(instance, filename):
-    """
-    Generates a unique upload path for the user's ID document.
-    """
     ext = filename.split('.')[-1]
     filename = f"{instance.user.id}_{uuid.uuid4()}.{ext}"
     return f"id_documents/{filename}"
 
 
 class UserProfile(models.Model):
-    """
-    Extends the built-in Django User model.
-    This holds the user's role (Citizen, Admin) and their associated ministry.
-    """
     ROLE_CHOICES = (
         ('CITIZEN', 'Citizen'),
-        ('ADMIN', 'Admin'),  # Ministry/Dept. Admin
-        ('SUPER', 'Super Admin')  # System Super Admin
+        ('ADMIN', 'Admin'),
+        ('SUPER', 'Super Admin')
     )
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='profile')
-
-    # This is the field that was missing
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='CITIZEN')
 
-    # This is the other field that was missing
+    # NEW FIELD: Phone Number
+    phone_number = models.CharField(max_length=15, null=True, blank=True)
+
     government_id_document = models.FileField(
         upload_to=get_id_document_upload_path,
         null=True,
         blank=True
     )
 
-    # For Admin users: specifies which ministry/dept they manage
     ministry = models.ForeignKey(Ministry, on_delete=models.SET_NULL, null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -80,9 +70,6 @@ class UserProfile(models.Model):
 # --- Complaint Models ---
 
 class Complaint(models.Model):
-    """
-    The main complaint model.
-    """
     STATUS_CHOICES = (
         ('PENDING', 'Pending'),
         ('IN_PROGRESS', 'In Progress'),
@@ -121,12 +108,8 @@ class Complaint(models.Model):
 
 
 class ComplaintUpdate(models.Model):
-    """
-    A model to store updates or comments on a complaint.
-    Can be added by the citizen or an admin.
-    """
     complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name='updates')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # User who made the update
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     update_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 

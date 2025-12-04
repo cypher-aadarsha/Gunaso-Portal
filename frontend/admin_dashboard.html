@@ -14,10 +14,11 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- NEW: html2canvas for downloading reports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Custom Scrollbar for Notification Dropdown */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -38,34 +39,26 @@
                     </span>
                 </div>
 
-                <!-- Right Side: Notifications & Logout -->
+                <!-- Right Side -->
                 <div class="flex items-center space-x-6">
                     
-                    <!-- UPDATED: Notification Bell -->
+                    <!-- NEW: Download Report Button -->
+                    <button onclick="downloadReport()" class="hidden md:flex items-center text-sm font-medium text-gray-600 hover:text-blue-600 transition bg-gray-50 hover:bg-blue-50 px-3 py-2 rounded-md border border-gray-200 hover:border-blue-200">
+                        <i class="fa-solid fa-download mr-2"></i> Download Report
+                    </button>
+
+                    <!-- Notification Bell -->
                     <div class="relative cursor-pointer" id="notification-container">
                         <div onclick="toggleNotifications()" class="relative p-2 hover:bg-gray-100 rounded-full transition">
                             <i class="fa-regular fa-bell text-gray-600 text-xl"></i>
-                            <!-- Badge -->
-                            <span id="notification-badge" class="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white opacity-0 transition-opacity duration-300 shadow-sm border border-white">
-                                0
-                            </span>
+                            <span id="notification-badge" class="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white opacity-0 transition-opacity duration-300 shadow-sm border border-white">0</span>
                         </div>
-
-                        <!-- Dropdown Menu -->
                         <div id="notification-dropdown" class="absolute right-0 top-12 w-80 bg-white border border-gray-100 shadow-xl rounded-xl hidden z-50 overflow-hidden ring-1 ring-black ring-opacity-5">
-                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                                 <h3 class="text-sm font-bold text-gray-900">Notifications</h3>
                                 <button onclick="markAllAsRead()" class="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline">Mark all as read</button>
                             </div>
-                            <div id="notification-list" class="max-h-80 overflow-y-auto">
-                                <!-- Items injected here -->
-                                <div class="p-8 text-center text-gray-400 text-sm">
-                                    No new notifications
-                                </div>
-                            </div>
-                            <div class="p-2 border-t border-gray-100 bg-gray-50 text-center">
-                                <span class="text-xs text-gray-400">Real-time updates</span>
-                            </div>
+                            <div id="notification-list" class="max-h-80 overflow-y-auto"></div>
                         </div>
                     </div>
 
@@ -91,52 +84,60 @@
             </div>
         </div>
 
-        <!-- ANALYTICS SECTION -->
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Stats Cards -->
-            <div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <!-- Card 1 -->
-                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Total Grievances</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-total">0</p>
-                    </div>
-                    <div class="h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
-                        <i class="fa-solid fa-folder-open text-xl"></i>
-                    </div>
-                </div>
-                <!-- Card 2 -->
-                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Resolved</p>
-                        <p class="text-3xl font-bold text-green-600 mt-2" id="stat-resolved">0</p>
-                    </div>
-                    <div class="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
-                        <i class="fa-solid fa-check text-xl"></i>
-                    </div>
-                </div>
-                <!-- Card 3 -->
-                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Pending Action</p>
-                        <p class="text-3xl font-bold text-orange-600 mt-2" id="stat-pending">0</p>
-                    </div>
-                    <div class="h-12 w-12 bg-orange-50 rounded-full flex items-center justify-center text-orange-600">
-                        <i class="fa-solid fa-clock text-xl"></i>
-                    </div>
-                </div>
+        <!-- ANALYTICS SECTION (Wrapped in ID for Screenshot) -->
+        <div id="report-section" class="bg-gray-50 p-2 rounded-xl">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h2 class="text-lg font-bold text-gray-700 uppercase tracking-wide">Weekly Status Report</h2>
+                <span class="text-xs text-gray-400 bg-white px-2 py-1 rounded border">Generated by Gunaso Portal</span>
             </div>
 
-            <!-- Chart -->
-            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center lg:col-span-1">
-                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 w-full text-left">Status Distribution</h3>
-                <div class="h-32 w-full relative">
-                    <canvas id="statusChart"></canvas>
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Stats Cards -->
+                <div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <!-- Card 1 -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Total Grievances</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-total">0</p>
+                        </div>
+                        <div class="h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
+                            <i class="fa-solid fa-folder-open text-xl"></i>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Resolved</p>
+                            <p class="text-3xl font-bold text-green-600 mt-2" id="stat-resolved">0</p>
+                        </div>
+                        <div class="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
+                            <i class="fa-solid fa-check text-xl"></i>
+                        </div>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Pending Action</p>
+                            <p class="text-3xl font-bold text-orange-600 mt-2" id="stat-pending">0</p>
+                        </div>
+                        <div class="h-12 w-12 bg-orange-50 rounded-full flex items-center justify-center text-orange-600">
+                            <i class="fa-solid fa-clock text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center lg:col-span-1">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 w-full text-left">Status Distribution</h3>
+                    <div class="h-32 w-full relative">
+                        <canvas id="statusChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
+        <!-- End Report Section -->
 
-        <!-- PMO Stats Filters (Hidden for regular admins) -->
+        <!-- PMO Stats Filters -->
         <div id="pmo-controls" class="hidden mb-6 bg-white p-4 rounded-lg shadow-sm border border-purple-100">
             <h3 class="text-xs font-bold text-purple-700 mb-3 uppercase tracking-wider flex items-center">
                 <i class="fa-solid fa-sliders mr-2"></i> PMO Global Filters
@@ -145,13 +146,10 @@
                 <div class="flex-1">
                     <select id="ministry-filter" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm p-2 border">
                         <option value="">View All Ministries</option>
-                        <!-- Populated via JS -->
                     </select>
                 </div>
                 <div class="flex items-end">
-                    <button onclick="loadDashboardData()" class="px-4 py-2 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700 transition font-medium w-full md:w-auto">
-                        Apply Filter
-                    </button>
+                    <button onclick="loadDashboardData()" class="px-4 py-2 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700 transition font-medium w-full md:w-auto">Apply Filter</button>
                 </div>
             </div>
         </div>
@@ -160,11 +158,8 @@
         <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-gray-800">Recent Grievances</h3>
-                <button onclick="loadDashboardData()" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition">
-                    <i class="fa-solid fa-rotate mr-1"></i> Refresh
-                </button>
+                <button onclick="loadDashboardData()" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition"><i class="fa-solid fa-rotate mr-1"></i> Refresh</button>
             </div>
-            
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -178,137 +173,20 @@
                         </tr>
                     </thead>
                     <tbody id="complaints-table-body" class="bg-white divide-y divide-gray-200">
-                        <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2 text-blue-500"></i><br>Loading portal data...
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- === MODALS === -->
-
-    <!-- 1. Detailed View Modal (ENHANCED) -->
-    <div id="details-modal" class="fixed inset-0 z-50 hidden" aria-modal="true">
-        <div class="absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()"></div>
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl z-10 overflow-hidden flex flex-col max-h-[90vh]">
-                
-                <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900" id="detail-title">Complaint Title</h3>
-                        <p class="text-xs text-gray-500 font-mono mt-0.5" id="detail-id">ID: 00000</p>
-                    </div>
-                    <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600 transition">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-
-                <!-- Modal Body (Scrollable) -->
-                <div class="p-6 overflow-y-auto">
-                    
-                    <!-- Top Info Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <!-- AI Analysis -->
-                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                            <h4 class="text-xs font-bold text-blue-700 uppercase mb-2 flex items-center">
-                                <i class="fa-solid fa-robot mr-2"></i> AI Analysis
-                            </h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Category:</span>
-                                    <span class="font-medium text-gray-900" id="detail-category">...</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Priority:</span>
-                                    <span class="font-bold" id="detail-priority">...</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Complainant Info -->
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                            <h4 class="text-xs font-bold text-gray-700 uppercase mb-2 flex items-center">
-                                <i class="fa-solid fa-user mr-2"></i> Complainant Details
-                            </h4>
-                            <div class="space-y-1 text-sm">
-                                <p><span class="text-gray-500 w-16 inline-block">Name:</span> <span class="font-medium text-gray-900" id="detail-user">...</span></p>
-                                <p><span class="text-gray-500 w-16 inline-block">Email:</span> <span class="font-medium text-gray-900" id="detail-email">...</span></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Description -->
-                    <div class="mb-6">
-                        <h4 class="text-sm font-bold text-gray-900 mb-2">Full Description</h4>
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap" id="detail-desc">
-                            ...
-                        </div>
-                    </div>
-
-                    <!-- Attachments (ENHANCED) -->
-                    <div class="mb-6" id="attachment-section">
-                        <h4 class="text-sm font-bold text-gray-900 mb-2">Supporting Documents</h4>
-                        <div id="detail-attachment-container">
-                            <!-- Injected JS -->
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
-                    <button onclick="closeDetailsModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">Close</button>
-                    <button id="btn-open-update" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
-                        <i class="fa-solid fa-pen-to-square mr-2"></i> Update Status
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Update Status Modal -->
-    <div id="status-modal" class="fixed inset-0 z-[60] hidden" aria-modal="true">
-        <div class="absolute inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm" onclick="closeStatusModal()"></div>
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 p-6 relative">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Update Resolution Status</h3>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">New Status</label>
-                        <select id="update-status-select" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            <option value="PENDING">Pending</option>
-                            <option value="IN_PROGRESS">In Progress</option>
-                            <option value="RESOLVED">Resolved</option>
-                            <option value="REJECTED">Rejected</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Official Remarks (Visible to Citizen)</label>
-                        <textarea id="update-remarks" rows="3" class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="e.g., Application approved, refund initiated..."></textarea>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button onclick="closeStatusModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button onclick="submitStatusUpdate()" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 shadow-sm">Confirm Update</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Modals (Detail & Status - Same as before) -->
+    <div id="details-modal" class="fixed inset-0 z-50 hidden" aria-modal="true"><div class="absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()"></div><div class="flex items-center justify-center min-h-screen p-4"><div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl z-10 overflow-hidden flex flex-col max-h-[90vh]"><div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50"><div><h3 class="text-lg font-bold text-gray-900" id="detail-title">...</h3><p class="text-xs text-gray-500 font-mono mt-0.5" id="detail-id">ID: ...</p></div><button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600 transition"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="p-6 overflow-y-auto"><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><div class="bg-blue-50 p-4 rounded-lg border border-blue-100"><h4 class="text-xs font-bold text-blue-700 uppercase mb-2 flex items-center"><i class="fa-solid fa-robot mr-2"></i> AI Analysis</h4><div class="space-y-2 text-sm"><div class="flex justify-between"><span class="text-gray-600">Category:</span><span class="font-medium text-gray-900" id="detail-category">...</span></div><div class="flex justify-between"><span class="text-gray-600">Priority:</span><span class="font-bold" id="detail-priority">...</span></div></div></div><div class="bg-gray-50 p-4 rounded-lg border border-gray-100"><h4 class="text-xs font-bold text-gray-700 uppercase mb-2 flex items-center"><i class="fa-solid fa-user mr-2"></i> Complainant Details</h4><div class="space-y-1 text-sm"><p><span class="text-gray-500 w-16 inline-block">Name:</span> <span class="font-medium text-gray-900" id="detail-user">...</span></p><p><span class="text-gray-500 w-16 inline-block">Email:</span> <span class="font-medium text-gray-900" id="detail-email">...</span></p></div></div></div><div class="mb-6"><h4 class="text-sm font-bold text-gray-900 mb-2">Full Description</h4><div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap" id="detail-desc">...</div></div><div class="mb-6" id="attachment-section"><h4 class="text-sm font-bold text-gray-900 mb-2">Supporting Documents</h4><div id="detail-attachment-container"></div></div></div><div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3"><button onclick="closeDetailsModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">Close</button><button id="btn-open-update" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"><i class="fa-solid fa-pen-to-square mr-2"></i> Update Status</button></div></div></div></div>
+    <div id="status-modal" class="fixed inset-0 z-[60] hidden" aria-modal="true"><div class="absolute inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm" onclick="closeStatusModal()"></div><div class="flex items-center justify-center min-h-screen p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 p-6 relative"><h3 class="text-lg font-bold text-gray-900 mb-4">Update Resolution Status</h3><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-1">New Status</label><select id="update-status-select" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"><option value="PENDING">Pending</option><option value="IN_PROGRESS">In Progress</option><option value="RESOLVED">Resolved</option><option value="REJECTED">Rejected</option></select></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Official Remarks (Visible to Citizen)</label><textarea id="update-remarks" rows="3" class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Remarks..."></textarea></div></div><div class="mt-6 flex justify-end space-x-3"><button onclick="closeStatusModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button><button onclick="submitStatusUpdate()" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 shadow-sm">Confirm Update</button></div></div></div></div>
 
     <script>
         const API_URL = 'http://127.0.0.1:8000/api';
-        let currentRole = 'ADMIN';
-        let selectedComplaintId = null;
-        let complaintsData = [];
-        let statusChart = null;
-
+        let currentRole = 'ADMIN'; let selectedComplaintId = null; let complaintsData = []; let statusChart = null;
         const token = localStorage.getItem('accessToken');
         if (!token) window.location.href = 'login.html';
 
@@ -317,52 +195,60 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadProfile();
             await loadDashboardData();
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(event) {
-                const container = document.getElementById('notification-container');
-                const dropdown = document.getElementById('notification-dropdown');
-                if (!container.contains(event.target)) {
-                    dropdown.classList.add('hidden');
-                }
-            });
+            document.addEventListener('click', (e) => { if (!document.getElementById('notification-container').contains(e.target)) document.getElementById('notification-dropdown').classList.add('hidden'); });
         });
 
-        // --- CORE & ANALYTICS ---
+        // --- NEW: REPORT DOWNLOAD LOGIC ---
+        function downloadReport() {
+            const element = document.getElementById('report-section');
+            
+            // Show toast to indicate processing
+            Toastify({ text: "Generating report...", style: { background: "#3b82f6" } }).showToast();
+
+            html2canvas(element, { scale: 2 }).then(canvas => {
+                // Create a link to download the image
+                const link = document.createElement('a');
+                link.download = `Gunaso_Report_${new Date().toISOString().split('T')[0]}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                Toastify({ text: "Report downloaded!", style: { background: "#10b981" } }).showToast();
+            }).catch(err => {
+                console.error(err);
+                Toastify({ text: "Failed to generate report", style: { background: "#ef4444" } }).showToast();
+            });
+        }
+
         async function loadProfile() {
             try {
                 const res = await fetch(`${API_URL}/profile/`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (!res.ok) throw new Error();
                 const profile = await res.json();
-                
                 if (profile.role === 'CITIZEN') { window.location.href = 'index.html'; return; }
                 currentRole = profile.role;
                 document.getElementById('welcome-msg').textContent = `Welcome, ${profile.first_name || profile.username}`;
                 const badge = document.getElementById('ministry-badge');
                 badge.classList.remove('hidden');
                 if (currentRole === 'SUPER' || (profile.user && profile.user.is_superuser)) {
-                    badge.textContent = "PMO / Super Admin";
-                    badge.className = "ml-4 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200";
-                    document.getElementById('pmo-controls').classList.remove('hidden');
-                    loadMinistriesList();
-                } else {
-                    badge.textContent = profile.ministry || "Ministry Admin";
-                }
+                    badge.textContent = "PMO / Super Admin"; badge.className = "ml-4 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200";
+                    document.getElementById('pmo-controls').classList.remove('hidden'); loadMinistriesList();
+                } else { badge.textContent = profile.ministry || "Ministry Admin"; }
             } catch (e) { window.location.href = 'login.html'; }
         }
 
-        async function loadDashboardData() {
-            await Promise.all([loadStats(), loadComplaints()]);
-        }
+        async function loadDashboardData() { await Promise.all([loadStats(), loadComplaints()]); }
 
         async function loadStats() {
             try {
                 const res = await fetch(`${API_URL}/complaints/stats/`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const stats = await res.json();
-                
                 animateValue("stat-total", parseInt(document.getElementById("stat-total").innerText), stats.total, 1000);
                 animateValue("stat-resolved", parseInt(document.getElementById("stat-resolved").innerText), stats.resolved, 1000);
                 animateValue("stat-pending", parseInt(document.getElementById("stat-pending").innerText), stats.pending, 1000);
+                
+                // Notif Badge
+                const badge = document.getElementById('notification-badge');
+                if (stats.pending > 0) { badge.textContent = stats.pending > 99 ? '99+' : stats.pending; badge.classList.remove('opacity-0'); }
+                else { badge.classList.add('opacity-0'); }
                 
                 renderChart(stats);
             } catch (e) {}
@@ -373,212 +259,91 @@
             if (statusChart) statusChart.destroy();
             statusChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: ['Pending', 'In Progress', 'Resolved', 'Rejected'],
-                    datasets: [{
-                        data: [stats.pending, stats.in_progress, stats.resolved, stats.rejected],
-                        backgroundColor: ['#f97316', '#eab308', '#22c55e', '#ef4444'],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
+                data: { labels: ['Pending', 'In Progress', 'Resolved', 'Rejected'], datasets: [{ data: [stats.pending, stats.in_progress, stats.resolved, stats.rejected], backgroundColor: ['#f97316', '#eab308', '#22c55e', '#ef4444'], borderWidth: 0 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
             });
         }
 
-        // --- COMPLAINTS & NOTIFICATIONS ---
         async function loadComplaints() {
             const tbody = document.getElementById('complaints-table-body');
-            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500"><i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2 text-blue-500"></i><br>Updating data...</td></tr>';
-
             try {
                 const res = await fetch(`${API_URL}/complaints/`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const data = await res.json();
                 let complaints = data.results || data;
-
                 const ministryFilter = document.getElementById('ministry-filter')?.value;
-                if (currentRole === 'SUPER' && ministryFilter) {
-                    complaints = complaints.filter(c => c.ministry === ministryFilter || c.ministry_id == ministryFilter);
-                }
-
+                if (currentRole === 'SUPER' && ministryFilter) { complaints = complaints.filter(c => c.ministry === ministryFilter || c.ministry_id == ministryFilter); }
                 complaintsData = complaints;
                 renderTable(complaints);
                 updateNotifications(complaints);
-
-            } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Failed to load data.</td></tr>';
-            }
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Failed to load data.</td></tr>'; }
         }
 
         function renderTable(complaints) {
-            const tbody = document.getElementById('complaints-table-body');
-            tbody.innerHTML = '';
+            const tbody = document.getElementById('complaints-table-body'); tbody.innerHTML = '';
             if (!complaints.length) { tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400 font-medium">No grievances found.</td></tr>'; return; }
-            
             complaints.forEach(c => {
                 const pColor = c.ai_suggested_priority === 'HIGH' ? 'bg-red-100 text-red-700 border-red-200' : (c.ai_suggested_priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-gray-100 text-gray-600 border-gray-200');
                 let sColor = 'bg-gray-100 text-gray-800';
                 if(c.status === 'RESOLVED') sColor = 'bg-green-100 text-green-700';
                 if(c.status === 'IN_PROGRESS') sColor = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
                 if(c.status === 'REJECTED') sColor = 'bg-red-50 text-red-700 border border-red-200';
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition border-b border-gray-50 last:border-0">
-                        <td class="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-500">#${c.tracking_id.substring(0,6)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">${c.title}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500"><i class="fa-solid fa-wand-magic-sparkles text-purple-400 mr-1"></i> ${c.ai_suggested_category || 'N/A'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wide ${pColor}">${c.ai_suggested_priority || 'LOW'}</span></td>
-                        <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${sColor}">${c.status.replace('_', ' ')}</span></td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <button onclick="openDetailsModal('${c.tracking_id}')" class="text-gray-500 hover:text-blue-600 transition bg-white border border-gray-200 hover:border-blue-300 p-1.5 rounded-md shadow-sm" title="View Details"><i class="fa-regular fa-eye"></i></button>
-                            <button onclick="openStatusModal('${c.tracking_id}', '${c.status}')" class="text-gray-500 hover:text-green-600 transition bg-white border border-gray-200 hover:border-green-300 p-1.5 rounded-md shadow-sm" title="Update Status"><i class="fa-solid fa-pen"></i></button>
-                        </td>
-                    </tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-gray-50 transition border-b border-gray-50 last:border-0"><td class="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-500">#${c.tracking_id.substring(0,6)}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">${c.title}</td><td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500"><i class="fa-solid fa-wand-magic-sparkles text-purple-400 mr-1"></i> ${c.ai_suggested_category || 'N/A'}</td><td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wide ${pColor}">${c.ai_suggested_priority || 'LOW'}</span></td><td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${sColor}">${c.status.replace('_', ' ')}</span></td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button onclick="openDetailsModal('${c.tracking_id}')" class="text-gray-500 hover:text-blue-600 transition bg-white border border-gray-200 hover:border-blue-300 p-1.5 rounded-md shadow-sm"><i class="fa-regular fa-eye"></i></button><button onclick="openStatusModal('${c.tracking_id}', '${c.status}')" class="text-gray-500 hover:text-green-600 transition bg-white border border-gray-200 hover:border-green-300 p-1.5 rounded-md shadow-sm"><i class="fa-solid fa-pen"></i></button></td></tr>`;
             });
         }
 
-        // --- NOTIFICATION LOGIC (NEW) ---
+        // Notifications
         function updateNotifications(complaints) {
             const pending = complaints.filter(c => c.status === 'PENDING');
             const list = document.getElementById('notification-list');
-            const badge = document.getElementById('notification-badge');
-            
-            // Local Storage check for "Read" items
             const seenIds = JSON.parse(localStorage.getItem('seen_complaints') || '[]');
             const unseenCount = pending.filter(c => !seenIds.includes(c.tracking_id)).length;
-
-            if (unseenCount > 0) {
-                badge.textContent = unseenCount > 9 ? '9+' : unseenCount;
-                badge.classList.remove('opacity-0');
-            } else {
-                badge.classList.add('opacity-0');
-            }
-
-            list.innerHTML = '';
-            if (pending.length === 0) {
-                list.innerHTML = '<div class="p-8 text-center text-gray-400 text-sm">No new notifications</div>';
-            } else {
-                pending.forEach(c => {
-                    const isUnread = !seenIds.includes(c.tracking_id);
-                    const bgClass = isUnread ? 'bg-blue-50' : 'bg-white';
-                    const dot = isUnread ? '<div class="h-2 w-2 bg-blue-500 rounded-full mr-3"></div>' : '';
-                    
-                    list.innerHTML += `
-                        <div class="${bgClass} p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer flex items-center" onclick="openDetailsModal('${c.tracking_id}')">
-                            ${dot}
-                            <div class="flex-1">
-                                <p class="text-sm font-semibold text-gray-800 truncate">${c.title}</p>
-                                <p class="text-xs text-gray-500 mt-0.5">ID: ${c.tracking_id.substring(0,8)}... • ${new Date(c.created_at).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-        }
-
-        function toggleNotifications() {
-            document.getElementById('notification-dropdown').classList.toggle('hidden');
-        }
-
-        function markAllAsRead() {
-            // Get all pending IDs and save to localStorage
-            const pendingIds = complaintsData.filter(c => c.status === 'PENDING').map(c => c.tracking_id);
-            localStorage.setItem('seen_complaints', JSON.stringify(pendingIds));
             
-            // Refresh UI
-            updateNotifications(complaintsData);
-            Toastify({ text: "All marked as read", style: { background: "#6b7280" }, duration: 2000 }).showToast();
+            list.innerHTML = '';
+            if (pending.length === 0) list.innerHTML = '<div class="p-8 text-center text-gray-400 text-sm">No new notifications</div>';
+            else pending.forEach(c => {
+                const isUnread = !seenIds.includes(c.tracking_id);
+                list.innerHTML += `<div class="${isUnread?'bg-blue-50':'bg-white'} p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer flex items-center" onclick="openDetailsModal('${c.tracking_id}')">${isUnread?'<div class="h-2 w-2 bg-blue-500 rounded-full mr-3"></div>':''}<div class="flex-1"><p class="text-sm font-semibold text-gray-800 truncate">${c.title}</p><p class="text-xs text-gray-500 mt-0.5">ID: ${c.tracking_id.substring(0,8)}... • ${new Date(c.created_at).toLocaleDateString()}</p></div></div>`;
+            });
         }
+        function toggleNotifications() { document.getElementById('notification-dropdown').classList.toggle('hidden'); }
+        function markAllAsRead() { const pendingIds = complaintsData.filter(c => c.status === 'PENDING').map(c => c.tracking_id); localStorage.setItem('seen_complaints', JSON.stringify(pendingIds)); updateNotifications(complaintsData); Toastify({ text: "All marked as read", style: { background: "#6b7280" }, duration: 2000 }).showToast(); }
 
-        // --- ENHANCED DETAILS MODAL ---
+        // Modals
         function openDetailsModal(id) {
-            const complaint = complaintsData.find(c => c.tracking_id === id);
-            if (!complaint) return;
-
-            document.getElementById('detail-title').textContent = complaint.title;
-            document.getElementById('detail-id').textContent = `Tracking ID: ${complaint.tracking_id}`;
-            document.getElementById('detail-desc').textContent = complaint.description;
-            document.getElementById('detail-category').textContent = complaint.ai_suggested_category || 'Uncategorized';
-            document.getElementById('detail-priority').textContent = complaint.ai_suggested_priority || 'LOW';
-            document.getElementById('detail-priority').className = complaint.ai_suggested_priority === 'HIGH' ? 'text-red-600 font-bold' : 'font-bold text-gray-900';
-
-            const user = complaint.created_by || {};
-            document.getElementById('detail-user').textContent = `${user.first_name || ''} ${user.last_name || user.username || 'Unknown'}`;
-            document.getElementById('detail-email').textContent = user.email || 'N/A';
-
-            // Attachment Handling with Icons
-            const attachContainer = document.getElementById('detail-attachment-container');
-            if (complaint.attachment) {
-                const fileUrl = complaint.attachment;
-                const ext = fileUrl.split('.').pop().toLowerCase();
-                let iconClass = 'fa-file';
-                let iconColor = 'text-gray-500';
-                let previewHtml = '';
-
-                if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-                    iconClass = 'fa-image'; iconColor = 'text-blue-500';
-                    previewHtml = `<img src="${fileUrl}" class="h-16 w-16 object-cover rounded border border-gray-200 ml-3 cursor-pointer hover:opacity-90" onclick="window.open('${fileUrl}')">`;
-                } else if (ext === 'pdf') {
-                    iconClass = 'fa-file-pdf'; iconColor = 'text-red-500';
-                } else if (['doc', 'docx'].includes(ext)) {
-                    iconClass = 'fa-file-word'; iconColor = 'text-blue-700';
-                }
-
-                attachContainer.innerHTML = `
-                    <div class="flex items-center p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition">
-                        <div class="mr-3 ${iconColor} text-3xl"><i class="fa-solid ${iconClass}"></i></div>
-                        <div class="flex-1 overflow-hidden">
-                            <p class="text-sm font-medium text-gray-900 truncate">Supporting Document.${ext}</p>
-                            <a href="${fileUrl}" target="_blank" class="text-xs text-blue-600 hover:underline font-medium">Download / View File</a>
-                        </div>
-                        ${previewHtml}
-                    </div>
-                `;
+            const c = complaintsData.find(x => x.tracking_id === id); if(!c) return;
+            document.getElementById('detail-title').textContent = c.title; document.getElementById('detail-id').textContent = `ID: ${c.tracking_id}`; document.getElementById('detail-desc').textContent = c.description; document.getElementById('detail-category').textContent = c.ai_suggested_category || 'Uncategorized';
+            document.getElementById('detail-priority').textContent = c.ai_suggested_priority || 'LOW'; document.getElementById('detail-priority').className = c.ai_suggested_priority === 'HIGH' ? 'text-red-600 font-bold' : 'font-bold text-gray-900';
+            const u = c.created_by || {}; document.getElementById('detail-user').textContent = `${u.first_name||''} ${u.last_name||u.username||'Unknown'}`; document.getElementById('detail-email').textContent = u.email||'N/A';
+            
+            const cont = document.getElementById('detail-attachment-container');
+            if (c.attachment) {
+                const ext = c.attachment.split('.').pop().toLowerCase();
+                let icon='fa-file', col='text-gray-500', prev='';
+                if(['jpg','jpeg','png'].includes(ext)) { icon='fa-image'; col='text-blue-500'; prev=`<img src="${c.attachment}" class="h-16 w-16 object-cover rounded border ml-3 cursor-pointer" onclick="window.open('${c.attachment}')">`; }
+                else if(ext==='pdf') { icon='fa-file-pdf'; col='text-red-500'; } else if(['doc','docx'].includes(ext)) { icon='fa-file-word'; col='text-blue-700'; }
+                cont.innerHTML = `<div class="flex items-center p-3 bg-gray-50 border rounded-lg hover:bg-gray-100 transition"><div class="mr-3 ${col} text-3xl"><i class="fa-solid ${icon}"></i></div><div class="flex-1 overflow-hidden"><p class="text-sm font-medium text-gray-900 truncate">Document.${ext}</p><a href="${c.attachment}" target="_blank" class="text-xs text-blue-600 hover:underline">Download</a></div>${prev}</div>`;
                 document.getElementById('attachment-section').classList.remove('hidden');
-            } else {
-                document.getElementById('attachment-section').classList.add('hidden');
-            }
+            } else document.getElementById('attachment-section').classList.add('hidden');
 
-            document.getElementById('btn-open-update').onclick = () => { closeDetailsModal(); openStatusModal(complaint.tracking_id, complaint.status); };
-            document.getElementById('details-modal').classList.remove('hidden');
-            // Hide notification dropdown if open
-            document.getElementById('notification-dropdown').classList.add('hidden');
+            document.getElementById('btn-open-update').onclick = () => { closeDetailsModal(); openStatusModal(c.tracking_id, c.status); };
+            document.getElementById('details-modal').classList.remove('hidden'); document.getElementById('notification-dropdown').classList.add('hidden');
         }
-
         function closeDetailsModal() { document.getElementById('details-modal').classList.add('hidden'); }
-
-        // --- UPDATE STATUS LOGIC ---
-        function openStatusModal(id, currentStatus) {
-            selectedComplaintId = id;
-            document.getElementById('update-status-select').value = currentStatus;
-            document.getElementById('status-modal').classList.remove('hidden');
-        }
+        function openStatusModal(id, status) { selectedComplaintId = id; document.getElementById('update-status-select').value = status; document.getElementById('status-modal').classList.remove('hidden'); }
         function closeStatusModal() { document.getElementById('status-modal').classList.add('hidden'); selectedComplaintId = null; }
         
         async function submitStatusUpdate() {
             if (!selectedComplaintId) return;
-            const newStatus = document.getElementById('update-status-select').value;
-            const remarks = document.getElementById('update-remarks').value;
+            const status = document.getElementById('update-status-select').value; const rem = document.getElementById('update-remarks').value;
             try {
-                await fetch(`${API_URL}/complaints/${selectedComplaintId}/`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) });
-                if (remarks.trim()) { await fetch(`${API_URL}/complaint-updates/`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ complaint_id: selectedComplaintId, update_text: `[Admin Status Update]: ${remarks}` }) }); }
-                Toastify({ text: "Updated successfully", style: { background: "#10b981" } }).showToast();
-                closeStatusModal();
-                loadDashboardData();
+                await fetch(`${API_URL}/complaints/${selectedComplaintId}/`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+                if (rem.trim()) await fetch(`${API_URL}/complaint-updates/`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ complaint_id: selectedComplaintId, update_text: `[Admin]: ${rem}` }) });
+                Toastify({ text: "Updated successfully", style: { background: "#10b981" } }).showToast(); closeStatusModal(); loadDashboardData();
             } catch (e) { Toastify({ text: "Update failed", style: { background: "#ef4444" } }).showToast(); }
         }
 
-        function animateValue(id, start, end, duration) {
-            if (start === end) return;
-            const range = end - start; const obj = document.getElementById(id); let startTime = null;
-            function step(timestamp) { if (!startTime) startTime = timestamp; const progress = Math.min((timestamp - startTime) / duration, 1); obj.innerHTML = Math.floor(progress * range + start); if (progress < 1) window.requestAnimationFrame(step); }
-            window.requestAnimationFrame(step);
-        }
-
-        async function loadMinistriesList() {
-            try { const res = await fetch(`${API_URL}/ministries/`); const data = await res.json(); const sel = document.getElementById('ministry-filter'); (data.results || data).forEach(m => sel.innerHTML += `<option value="${m.name}">${m.name}</option>`); } catch(e){}
-        }
-
+        function animateValue(id, start, end, duration) { if (start === end) return; const range = end - start; const obj = document.getElementById(id); let startTime = null; function step(timestamp) { if (!startTime) startTime = timestamp; const progress = Math.min((timestamp - startTime) / duration, 1); obj.innerHTML = Math.floor(progress * range + start); if (progress < 1) window.requestAnimationFrame(step); } window.requestAnimationFrame(step); }
+        async function loadMinistriesList() { try { const res = await fetch(`${API_URL}/ministries/`); const data = await res.json(); const sel = document.getElementById('ministry-filter'); (data.results || data).forEach(m => sel.innerHTML += `<option value="${m.name}">${m.name}</option>`); } catch(e){} }
         function handleLogout() { localStorage.clear(); window.location.href = 'login.html'; }
     </script>
 </body>

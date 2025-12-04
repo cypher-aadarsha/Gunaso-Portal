@@ -6,46 +6,57 @@
     <title>Gunaso Portal - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <style>body { font-family: 'Inter', sans-serif; } .toastify { border-radius: 0.5rem; font-weight: 500; }</style>
+    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 text-gray-800">
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <!-- Header -->
-    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center text-blue-600">
-                    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.866 10.211 9 11.896 5.134-1.685 9-6.305 9-11.896a12.02 12.02 0 00-1.05-4.016z" /></svg>
+                    <img src="images/Govt Logo.jpeg" alt="Logo" class="h-8 w-auto mr-3">
                     <span class="ml-2 text-xl font-bold text-gray-900 tracking-tight">Gunaso Portal</span>
                 </div>
-                <div class="flex items-center relative">
-                    <button id="user-menu-button" class="flex items-center max-w-xs bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 p-1 hover:bg-gray-50 transition-colors">
-                        <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="fa-solid fa-user text-sm"></i></span>
-                        <span class="ml-3 text-sm font-medium text-gray-700 hidden md:block" id="user-name-display">Loading...</span>
-                        <i class="fa-solid fa-chevron-down ml-2 text-xs text-gray-400 hidden md:block"></i>
-                    </button>
-                    <!-- Dropdown -->
-                    <div id="user-menu" class="hidden origin-top-right absolute right-0 top-12 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-50">
-                        <div class="px-4 py-3">
-                            <p class="text-sm text-gray-900">Signed in as</p>
-                            <p class="text-sm font-medium text-gray-900 truncate" id="menu-email-display">...</p>
+                
+                <div class="flex items-center space-x-6">
+                    <!-- Notification Bell -->
+                    <div class="relative cursor-pointer" id="notification-container">
+                        <div onclick="toggleNotifications()" class="relative p-2 hover:bg-gray-100 rounded-full transition">
+                            <i class="fa-regular fa-bell text-gray-600 text-xl"></i>
+                            <span id="notification-badge" class="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white opacity-0 transition-opacity">0</span>
                         </div>
-                        <div class="py-1">
-                            <a href="#" id="menu-profile" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa-regular fa-id-card mr-3 text-gray-400"></i>Your Profile</a>
-                            <a href="#" id="menu-change-email" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa-regular fa-envelope mr-3 text-gray-400"></i>Change Email</a>
-                        </div>
-                        <div class="py-1 px-4">
-                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-2 mt-1">Language</p>
-                            <div class="flex items-center space-x-2 bg-gray-100 rounded p-1">
-                                <button id="lang-en" class="flex-1 text-xs font-medium bg-white text-blue-600 shadow-sm py-1 rounded text-center transition-all">English</button>
-                                <button id="lang-ne" class="flex-1 text-xs font-medium text-gray-500 hover:text-gray-700 py-1 rounded text-center transition-all">नेपाली</button>
+                        <!-- Dropdown (UPDATED) -->
+                        <div id="notification-dropdown" class="absolute right-0 top-12 w-80 bg-white border border-gray-100 shadow-xl rounded-xl hidden z-50 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                <h3 class="text-sm font-bold text-gray-900">Your Updates</h3>
+                                <!-- Mark as Read Button -->
+                                <button onclick="markAllAsRead()" class="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline">Mark all as read</button>
                             </div>
+                            <div id="notification-list" class="max-h-80 overflow-y-auto"></div>
                         </div>
-                        <div class="py-1">
-                            <a href="#" id="logout-button" class="group flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"><i class="fa-solid fa-arrow-right-from-bracket mr-3 text-red-400"></i>Logout</a>
+                    </div>
+
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="user-menu-button" class="flex items-center max-w-xs bg-white rounded-full focus:outline-none p-1 hover:bg-gray-50 transition">
+                            <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="fa-solid fa-user text-sm"></i></span>
+                            <span class="ml-3 text-sm font-medium text-gray-700 hidden md:block" id="user-name-display">Loading...</span>
+                            <i class="fa-solid fa-chevron-down ml-2 text-xs text-gray-400 hidden md:block"></i>
+                        </button>
+                        <!-- Dropdown -->
+                        <div id="user-menu" class="hidden origin-top-right absolute right-0 top-12 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-50">
+                            <div class="px-4 py-3"><p class="text-sm text-gray-900">Signed in as</p><p class="text-sm font-medium text-gray-900 truncate" id="menu-email-display">...</p></div>
+                            <div class="py-1">
+                                <a href="#" id="menu-profile" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa-regular fa-id-card mr-3 text-gray-400"></i>Your Profile</a>
+                                <a href="#" id="menu-change-email" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa-regular fa-envelope mr-3 text-gray-400"></i>Change Email</a>
+                            </div>
+                            <div class="py-1">
+                                <a href="#" id="logout-button" class="group flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"><i class="fa-solid fa-arrow-right-from-bracket mr-3 text-red-400"></i>Logout</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -55,11 +66,57 @@
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        
+        <!-- Welcome & Date -->
+        <div class="mb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Citizen Dashboard</h1>
+                <p class="text-gray-500 mt-1">Track your grievances and file new complaints.</p>
+            </div>
+            <p class="text-sm text-gray-400 hidden sm:block" id="current-date"></p>
+        </div>
+
+        <!-- 1. DASHBOARD ANALYTICS (NEW) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            <!-- Total -->
+            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Filed</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-total">0</p>
+                </div>
+                <div class="h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
+                </div>
+            </div>
+            <!-- Resolved -->
+            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Resolved</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2" id="stat-resolved">0</p>
+                </div>
+                <div class="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
+                    <i class="fa-solid fa-check-circle text-xl"></i>
+                </div>
+            </div>
+            <!-- Pending -->
+            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">In Progress / Pending</p>
+                    <p class="text-3xl font-bold text-orange-600 mt-2" id="stat-pending">0</p>
+                </div>
+                <div class="h-12 w-12 bg-orange-50 rounded-full flex items-center justify-center text-orange-600">
+                    <i class="fa-solid fa-spinner text-xl"></i>
+                </div>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- New Grievance Form -->
+            <!-- 2. File New Grievance -->
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-                    <div class="bg-blue-600 px-6 py-4"><h2 class="text-lg font-semibold text-white"><i class="fa-solid fa-pen-to-square mr-2"></i>File a New Grievance</h2></div>
+                    <div class="bg-blue-600 px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-white"><i class="fa-solid fa-pen-to-square mr-2"></i>File New Grievance</h2>
+                    </div>
                     <div class="p-6">
                         <form id="grievance-form" class="space-y-5">
                             <div>
@@ -72,21 +129,42 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                                <input type="text" id="subject" required class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <input type="text" id="subject" required class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Brief summary of issue">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Details</label>
-                                <textarea id="details" rows="4" required class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                                <textarea id="details" rows="4" required class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Provide full details here..."></textarea>
                             </div>
+                            
+                            <!-- 3. IMPROVED DOCUMENT ATTACHMENT -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Document (Optional)</label>
-                                <input type="file" id="document" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Supporting Document</label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition cursor-pointer relative">
+                                    <div class="space-y-1 text-center">
+                                        <i class="fa-solid fa-cloud-arrow-up text-gray-400 text-3xl mb-2"></i>
+                                        <div class="flex text-sm text-gray-600 justify-center">
+                                            <label for="attachment" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                                                <span>Upload a file</span>
+                                                <input id="attachment" name="attachment" type="file" class="sr-only" accept=".pdf,.doc,.docx,image/png,image/jpeg,image/jpg">
+                                            </label>
+                                            <p class="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG, PDF, DOCX up to 5MB</p>
+                                    </div>
+                                    <div id="file-name-display" class="absolute inset-0 bg-blue-50 flex items-center justify-center text-blue-700 text-sm font-medium hidden rounded-lg border-2 border-blue-200">
+                                        <!-- File name injected here -->
+                                    </div>
+                                </div>
                             </div>
-                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Submit Complaint</button>
+
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+                                Submit Complaint
+                            </button>
                         </form>
                     </div>
                 </div>
             </div>
+
             <!-- My Grievances -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -98,10 +176,10 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Tracking ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">ID</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Subject</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="grievance-table-body" class="bg-white divide-y divide-gray-200">
@@ -114,105 +192,236 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    <!-- Profile Modal -->
-    <div id="profile-modal" class="fixed inset-0 z-50 hidden" aria-modal="true">
-        <div class="absolute inset-0 bg-gray-500 bg-opacity-75" onclick="toggleModal('profile-modal', false)"></div>
+    <!-- 4. DETAILS MODAL (Citizen View) -->
+    <div id="details-modal" class="fixed inset-0 z-50 hidden" aria-modal="true">
+        <div class="absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()"></div>
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 p-6 relative">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Your Profile</h3>
-                <div class="space-y-3">
-                    <div><p class="text-sm text-gray-500">Name</p><p class="font-medium" id="modal-fullname">...</p></div>
-                    <div><p class="text-sm text-gray-500">Email</p><p class="font-medium" id="modal-email">...</p></div>
-                    <div><p class="text-sm text-gray-500">Role</p><p class="font-medium">Citizen</p></div>
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl z-10 overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900" id="detail-title">...</h3>
+                        <p class="text-xs text-gray-500 font-mono mt-0.5" id="detail-id">...</p>
+                    </div>
+                    <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-                <div class="mt-6 flex justify-end"><button onclick="toggleModal('profile-modal', false)" class="px-4 py-2 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200">Close</button></div>
+                <div class="p-6 overflow-y-auto">
+                    <div class="mb-6">
+                        <h4 class="text-sm font-bold text-gray-900 mb-2">Description</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap" id="detail-desc">...</div>
+                    </div>
+                    <div class="mb-6" id="attachment-section">
+                        <h4 class="text-sm font-bold text-gray-900 mb-2">Attached Document</h4>
+                        <div id="detail-attachment-container"></div>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                    <button onclick="closeDetailsModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Close</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Email Modal -->
-    <div id="email-modal" class="fixed inset-0 z-50 hidden" aria-modal="true">
-        <div class="absolute inset-0 bg-gray-500 bg-opacity-75" onclick="toggleModal('email-modal', false)"></div>
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 p-6 relative">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Change Email Address</h3>
-                <form id="email-form">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">New Email</label>
-                    <input type="email" id="new-email" required class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" onclick="toggleModal('email-modal', false)" class="px-4 py-2 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <!-- Modals (Profile & Email) -->
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden"><div class="absolute inset-0 bg-gray-500 bg-opacity-75" onclick="toggleModal('profile-modal', false)"></div><div class="flex items-center justify-center min-h-screen p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 p-6 relative"><h3 class="text-lg font-medium text-gray-900 mb-4">Your Profile</h3><div class="space-y-3"><div><p class="text-sm text-gray-500">Name</p><p class="font-medium" id="modal-fullname">...</p></div><div><p class="text-sm text-gray-500">Email</p><p class="font-medium" id="modal-email">...</p></div><div><p class="text-sm text-gray-500">Role</p><p class="font-medium">Citizen</p></div></div><div class="mt-6 flex justify-end"><button onclick="toggleModal('profile-modal', false)" class="px-4 py-2 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200">Close</button></div></div></div></div>
+    <div id="email-modal" class="fixed inset-0 z-50 hidden"><div class="absolute inset-0 bg-gray-500 bg-opacity-75" onclick="toggleModal('email-modal', false)"></div><div class="flex items-center justify-center min-h-screen p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 p-6 relative"><h3 class="text-lg font-medium text-gray-900 mb-4">Change Email Address</h3><form id="email-form"><label class="block text-sm font-medium text-gray-700 mb-1">New Email</label><input type="email" id="new-email" required class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"><div class="mt-6 flex justify-end space-x-3"><button type="button" onclick="toggleModal('email-modal', false)" class="px-4 py-2 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200">Cancel</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button></div></form></div></div></div>
 
     <script>
         const API_URL = 'http://127.0.0.1:8000/api';
         const userMenuBtn = document.getElementById('user-menu-button');
         const userMenu = document.getElementById('user-menu');
-        let currentUserData = null;
+        let complaintsData = []; // Store for modal
 
-        function showToast(msg, err=false) {
-            Toastify({ text: msg, duration: 4000, style: { background: err ? "#ef4444" : "#10b981" } }).showToast();
-        }
+        // Auth
         function getAuthHeaders() {
             const t = localStorage.getItem('accessToken');
             if (!t) { window.location.href = 'login.html'; return null; }
             return { 'Authorization': `Bearer ${t}` };
         }
-        function toggleModal(id, show) { document.getElementById(id).classList.toggle('hidden', !show); }
 
+        // Init
         document.addEventListener('DOMContentLoaded', () => {
             const headers = getAuthHeaders();
             if (!headers) return;
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
             loadProfile(headers);
             loadMinistries();
             loadMyComplaints(headers);
+            loadStats(headers); // NEW
 
+            // UI Listeners
             userMenuBtn.onclick = (e) => { e.stopPropagation(); userMenu.classList.toggle('hidden'); };
-            document.onclick = (e) => { if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) userMenu.classList.add('hidden'); };
+            document.onclick = (e) => { 
+                if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) userMenu.classList.add('hidden'); 
+                const notifContainer = document.getElementById('notification-container');
+                if (!notifContainer.contains(e.target)) document.getElementById('notification-dropdown').classList.add('hidden');
+            };
 
-            // Modals
             document.getElementById('menu-profile').onclick = (e) => { e.preventDefault(); toggleModal('profile-modal', true); };
             document.getElementById('menu-change-email').onclick = (e) => { e.preventDefault(); toggleModal('email-modal', true); };
-
-            // Language
-            document.getElementById('lang-en').onclick = () => setLang('en');
-            document.getElementById('lang-ne').onclick = () => setLang('ne');
+            
+            // File Input styling
+            document.getElementById('attachment').onchange = function() {
+                const name = this.files[0]?.name;
+                const display = document.getElementById('file-name-display');
+                if(name) {
+                    display.textContent = name;
+                    display.classList.remove('hidden');
+                } else {
+                    display.classList.add('hidden');
+                }
+            };
         });
 
-        function setLang(lang) {
-            const enBtn = document.getElementById('lang-en');
-            const neBtn = document.getElementById('lang-ne');
-            if (lang === 'en') {
-                enBtn.className = "flex-1 text-xs font-medium bg-white text-blue-600 shadow-sm py-1 rounded text-center";
-                neBtn.className = "flex-1 text-xs font-medium text-gray-500 hover:text-gray-700 py-1 rounded text-center";
-            } else {
-                neBtn.className = "flex-1 text-xs font-medium bg-white text-blue-600 shadow-sm py-1 rounded text-center";
-                enBtn.className = "flex-1 text-xs font-medium text-gray-500 hover:text-gray-700 py-1 rounded text-center";
-            }
-            showToast(lang === 'en' ? "Language set to English" : "Language set to Nepali");
+        // --- NEW: Load Stats ---
+        async function loadStats(h) {
+            try {
+                // The backend API we built for admin works here too! It filters by user automatically.
+                const res = await fetch(`${API_URL}/complaints/stats/`, { headers: h });
+                const stats = await res.json();
+                
+                document.getElementById("stat-total").innerText = stats.total;
+                document.getElementById("stat-resolved").innerText = stats.resolved;
+                // Combine Pending + In Progress for Citizen "Pending" view
+                document.getElementById("stat-pending").innerText = stats.pending + stats.in_progress;
+            } catch (e) { console.error("Stats error", e); }
         }
 
+        // Load Complaints & Update Notifications
+        async function loadMyComplaints(h) {
+            const tbody = document.getElementById('grievance-table-body');
+            try {
+                const res = await fetch(`${API_URL}/complaints/`, { headers: h });
+                const data = await res.json();
+                const list = data.results || data;
+                complaintsData = list;
+
+                // 1. Update Table
+                tbody.innerHTML = '';
+                if (!list.length) { tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No grievances found.</td></tr>'; }
+                else {
+                    list.forEach(c => {
+                        let color = 'bg-gray-100 text-gray-800';
+                        if (c.status === 'RESOLVED') color = 'bg-green-100 text-green-800';
+                        if (c.status === 'IN_PROGRESS') color = 'bg-yellow-100 text-yellow-800';
+                        if (c.status === 'REJECTED') color = 'bg-red-100 text-red-800';
+                        
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 text-xs font-mono text-gray-500">${c.tracking_id.substring(0,8)}...</td>
+                                <td class="px-6 py-4 text-sm font-medium text-gray-900 truncate max-w-[200px]">${c.title}</td>
+                                <td class="px-6 py-4"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${color}">${c.status.replace('_',' ')}</span></td>
+                                <td class="px-6 py-4 text-sm">
+                                    <button onclick="openDetailsModal('${c.tracking_id}')" class="text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-200 px-3 py-1.5 rounded-md hover:bg-blue-50 transition">View Details</button>
+                                </td>
+                            </tr>`;
+                    });
+                }
+
+                // 2. Update Notifications (Based on recent updates)
+                updateNotifications(list);
+
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">Failed to load data.</td></tr>'; }
+        }
+
+        // Notification Logic
+        function updateNotifications(list) {
+            const badge = document.getElementById('notification-badge');
+            const notifList = document.getElementById('notification-list');
+            
+            // For citizens, "Updates" are complaints that are NOT Pending (i.e., someone worked on them)
+            const updates = list.filter(c => c.status !== 'PENDING');
+            
+            // Local Storage Check for "Mark as Read" functionality
+            const seenIds = JSON.parse(localStorage.getItem('seen_updates') || '[]');
+            const unseenCount = updates.filter(c => !seenIds.includes(c.tracking_id)).length;
+
+            if (unseenCount > 0) {
+                badge.textContent = unseenCount > 9 ? '9+' : unseenCount;
+                badge.classList.remove('opacity-0');
+            } else {
+                badge.classList.add('opacity-0');
+            }
+
+            notifList.innerHTML = '';
+            if (updates.length === 0) {
+                notifList.innerHTML = '<div class="p-6 text-center text-gray-400 text-xs">No updates yet.</div>';
+            } else {
+                updates.forEach(c => {
+                    const isUnread = !seenIds.includes(c.tracking_id);
+                    const bgClass = isUnread ? 'bg-blue-50' : 'bg-white';
+                    const dot = isUnread ? '<div class="h-2 w-2 bg-blue-500 rounded-full mr-3"></div>' : '';
+
+                    notifList.innerHTML += `
+                        <div class="${bgClass} p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer flex items-center" onclick="openDetailsModal('${c.tracking_id}')">
+                            ${dot}
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-800">Status Update: ${c.status}</p>
+                                <p class="text-xs text-gray-500 mt-1">Complaint: ${c.title}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function toggleNotifications() { document.getElementById('notification-dropdown').classList.toggle('hidden'); }
+
+        // NEW: Mark all as read function
+        function markAllAsRead() {
+            // Get all updated complaint IDs
+            const updates = complaintsData.filter(c => c.status !== 'PENDING').map(c => c.tracking_id);
+            localStorage.setItem('seen_updates', JSON.stringify(updates));
+            
+            // Refresh UI
+            updateNotifications(complaintsData);
+            Toastify({ text: "All marked as read", style: { background: "#6b7280" }, duration: 2000 }).showToast();
+        }
+
+        // Details Modal
+        function openDetailsModal(id) {
+            const complaint = complaintsData.find(c => c.tracking_id === id);
+            if (!complaint) return;
+            
+            document.getElementById('detail-title').textContent = complaint.title;
+            document.getElementById('detail-id').textContent = `ID: ${complaint.tracking_id}`;
+            document.getElementById('detail-desc').textContent = complaint.description;
+
+            // Attachments
+            const container = document.getElementById('detail-attachment-container');
+            if (complaint.attachment) {
+                const ext = complaint.attachment.split('.').pop().toLowerCase();
+                let icon = 'fa-file';
+                if (['jpg','jpeg','png'].includes(ext)) icon = 'fa-image text-blue-500';
+                if (ext === 'pdf') icon = 'fa-file-pdf text-red-500';
+                if (['doc','docx'].includes(ext)) icon = 'fa-file-word text-blue-700';
+                
+                container.innerHTML = `
+                    <div class="flex items-center p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <i class="fa-solid ${icon} text-2xl mr-3"></i>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="text-sm font-medium text-gray-900 truncate">Attached Document</p>
+                            <a href="${complaint.attachment}" target="_blank" class="text-xs text-blue-600 hover:underline">Download / View</a>
+                        </div>
+                    </div>`;
+                document.getElementById('attachment-section').classList.remove('hidden');
+            } else {
+                document.getElementById('attachment-section').classList.add('hidden');
+            }
+            document.getElementById('details-modal').classList.remove('hidden');
+            document.getElementById('notification-dropdown').classList.add('hidden');
+        }
+        function closeDetailsModal() { document.getElementById('details-modal').classList.add('hidden'); }
+
+        // Standard Loaders
         async function loadProfile(h) {
             try {
                 const res = await fetch(`${API_URL}/profile/`, { headers: h });
-                if (!res.ok) throw new Error();
                 const data = await res.json();
-                currentUserData = data;
-
-                // Name Handling
-                let name = data.first_name || (data.user && data.user.first_name) || (data.user && data.user.username) || 'Citizen';
+                const name = data.first_name || (data.user && data.user.first_name) || 'Citizen';
+                const email = data.email || (data.user && data.user.email) || '';
                 document.getElementById('user-name-display').textContent = name;
-
-                // Email Handling
-                let email = data.email || (data.user && data.user.email) || '';
                 document.getElementById('menu-email-display').textContent = email;
-
-                // Modal
                 document.getElementById('modal-fullname').textContent = name + (data.last_name ? ' ' + data.last_name : '');
                 document.getElementById('modal-email').textContent = email;
             } catch (e) { console.error(e); }
@@ -224,10 +433,8 @@
                 const data = await res.json();
                 const sel = document.getElementById('ministry');
                 sel.innerHTML = '<option value="">Select a Ministry...</option>';
-                // Handle Pagination if present, else Array
-                const list = data.results || data;
-                list.forEach(m => sel.innerHTML += `<option value="${m.id}">${m.name}</option>`);
-            } catch(e) { console.error(e); }
+                (data.results || data).forEach(m => sel.innerHTML += `<option value="${m.id}">${m.name}</option>`);
+            } catch(e) {}
         }
 
         document.getElementById('ministry').onchange = async function() {
@@ -237,36 +444,12 @@
             if(!id) return;
             const res = await fetch(`${API_URL}/departments/?ministry_id=${id}`);
             const data = await res.json();
-            const list = data.results || data;
             dept.innerHTML = '<option value="">Select Department...</option>';
-            list.forEach(d => dept.innerHTML += `<option value="${d.id}">${d.name}</option>`);
+            (data.results || data).forEach(d => dept.innerHTML += `<option value="${d.id}">${d.name}</option>`);
             dept.disabled = false;
         };
 
-        async function loadMyComplaints(h) {
-            const tbody = document.getElementById('grievance-table-body');
-            try {
-                const res = await fetch(`${API_URL}/complaints/`, { headers: h });
-                const data = await res.json();
-                // FIX FOR "Failed to load" -> Handle Pagination
-                const list = data.results || data;
-
-                tbody.innerHTML = '';
-                if (!list.length) { tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No grievances found.</td></tr>'; return; }
-
-                list.forEach(c => {
-                    let color = 'bg-gray-100 text-gray-800';
-                    if (c.status === 'RESOLVED') color = 'bg-green-100 text-green-800';
-                    if (c.status === 'IN_PROGRESS') color = 'bg-yellow-100 text-yellow-800';
-                    const row = `<tr class="hover:bg-gray-50"><td class="px-6 py-4 text-sm font-mono text-blue-600">${c.tracking_id.substring(0,8)}...</td><td class="px-6 py-4 text-sm font-medium text-gray-900">${c.title}</td><td class="px-6 py-4"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${color}">${c.status}</span></td><td class="px-6 py-4 text-sm text-gray-500">${new Date(c.created_at).toLocaleDateString()}</td></tr>`;
-                    tbody.innerHTML += row;
-                });
-            } catch (e) {
-                console.error(e);
-                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">Failed to load grievances.</td></tr>';
-            }
-        }
-
+        // Submit Form
         document.getElementById('grievance-form').onsubmit = async function(e) {
             e.preventDefault();
             const btn = this.querySelector('button'); btn.disabled=true; btn.innerText='Submitting...';
@@ -275,37 +458,23 @@
             fd.append('description', document.getElementById('details').value);
             fd.append('ministry_id', document.getElementById('ministry').value);
             fd.append('department_id', document.getElementById('department').value);
+            
+            // Note: attachment logic was fixed in prior step (name="attachment") in HTML directly
 
             try {
                 const res = await fetch(`${API_URL}/complaints/`, { method:'POST', headers: getAuthHeaders(), body: fd });
                 if(!res.ok) throw new Error();
-                showToast('Submitted successfully!');
+                Toastify({ text: "Submitted successfully!", style: { background: "#10b981" } }).showToast();
                 this.reset();
+                document.getElementById('file-name-display').classList.add('hidden');
                 loadMyComplaints(getAuthHeaders());
-            } catch(e) { showToast('Error submitting', true); }
+                loadStats(getAuthHeaders());
+            } catch(e) { Toastify({ text: "Error submitting", style: { background: "#ef4444" } }).showToast(); }
             btn.disabled=false; btn.innerText='Submit Complaint';
         };
 
-        // Update Email Logic
-        document.getElementById('email-form').onsubmit = async function(e) {
-            e.preventDefault();
-            const newEmail = document.getElementById('new-email').value;
-            try {
-                const res = await fetch(`${API_URL}/profile/`, {
-                    method: 'PATCH',
-                    headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user: { email: newEmail } })
-                });
-                if(!res.ok) throw new Error();
-                showToast('Email updated successfully!');
-                toggleModal('email-modal', false);
-                loadProfile(getAuthHeaders());
-            } catch(e) { showToast('Failed to update email', true); }
-        };
-
-        document.getElementById('logout-button').onclick = () => {
-            localStorage.clear(); window.location.href='login.html';
-        };
+        function toggleModal(id, show) { document.getElementById(id).classList.toggle('hidden', !show); }
+        document.getElementById('logout-button').onclick = () => { localStorage.clear(); window.location.href='login.html'; };
     </script>
 </body>
 </html>
