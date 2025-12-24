@@ -8,29 +8,23 @@ from .models import Complaint, Ministry, Department, ComplaintUpdate, UserProfil
 # --- User & Registration Serializers ---
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the UserProfile model.
-    """
     first_name = serializers.CharField(source='user.first_name', required=False)
     last_name = serializers.CharField(source='user.last_name', required=False)
     email = serializers.EmailField(source='user.email', required=False)
 
     class Meta:
         model = UserProfile
-        # Added 'phone_number' to fields
-        fields = ['user', 'role', 'phone_number', 'ministry', 'department', 'government_id_document', 'first_name', 'last_name',
-                  'email']
+        fields = ['user', 'role', 'phone_number', 'ministry', 'department', 'government_id_document', 'first_name',
+                  'last_name', 'email']
         read_only_fields = ['user', 'role', 'ministry', 'department', 'government_id_document']
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', {})
         user = instance.user
-
         if 'email' in user_data: user.email = user_data['email']
         if 'first_name' in user_data: user.first_name = user_data['first_name']
         if 'last_name' in user_data: user.last_name = user_data['last_name']
         user.save()
-
         return super().update(instance, validated_data)
 
 
@@ -40,12 +34,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     government_id_document = serializers.FileField(required=True, write_only=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
-    # NEW: Phone number is explicitly required here
     phone_number = serializers.CharField(required=True, write_only=True, max_length=15)
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name', 'phone_number', 'government_id_document')
+        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name', 'phone_number',
+                  'government_id_document')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
@@ -67,7 +61,6 @@ class RegisterSerializer(serializers.ModelSerializer):
                 first_name=first_name,
                 last_name=last_name
             )
-            # Create profile with phone number
             UserProfile.objects.create(
                 user=user,
                 government_id_document=government_id_document,
@@ -75,6 +68,10 @@ class RegisterSerializer(serializers.ModelSerializer):
                 role='CITIZEN'
             )
         return user
+
+
+class BulkAdminUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
 
 
 # --- Main App Serializers ---
@@ -113,18 +110,25 @@ class ComplaintUpdateSerializer(serializers.ModelSerializer):
 class ComplaintSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
     updates = ComplaintUpdateSerializer(many=True, read_only=True)
-    ministry = serializers.StringRelatedField(read_only=True)
-    department = serializers.StringRelatedField(read_only=True)
-    ministry_id = serializers.PrimaryKeyRelatedField(queryset=Ministry.objects.all(), source='ministry',
-                                                     write_only=True)
-    department_id = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), source='department',
-                                                       write_only=True)
+
+    # Read-only fields (Nested lists of objects)
+    ministries = MinistrySerializer(many=True, read_only=True)
+    departments = DepartmentSerializer(many=True, read_only=True)
+
+    # Write-only fields (Lists of IDs for submission)
+    ministry_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Ministry.objects.all(), source='ministries', many=True, write_only=True
+    )
+    department_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all(), source='departments', many=True, write_only=True, required=False
+    )
 
     class Meta:
         model = Complaint
         fields = [
             'tracking_id', 'title', 'description', 'status', 'created_at', 'updated_at',
-            'created_by', 'ministry', 'department', 'ministry_id', 'department_id',
+            'created_by',
+            'ministries', 'departments', 'ministry_ids', 'department_ids',
             'attachment', 'updates', 'ai_suggested_category', 'ai_suggested_priority',
         ]
         read_only_fields = ('tracking_id', 'created_at', 'updated_at', 'created_by',

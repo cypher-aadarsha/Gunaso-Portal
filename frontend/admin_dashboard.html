@@ -14,7 +14,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- NEW: html2canvas for downloading reports -->
+    <!-- html2canvas for downloading reports -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
@@ -40,11 +40,16 @@
                 </div>
 
                 <!-- Right Side -->
-                <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-4">
                     
-                    <!-- NEW: Download Report Button -->
+                    <!-- Bulk Create Button (Super Admin Only) -->
+                    <button id="btn-bulk-create" onclick="openBulkModal()" class="hidden items-center text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition px-3 py-2 rounded-md shadow-sm">
+                        <i class="fa-solid fa-file-excel mr-2"></i> Bulk Create
+                    </button>
+
+                    <!-- Download Report Button -->
                     <button onclick="downloadReport()" class="hidden md:flex items-center text-sm font-medium text-gray-600 hover:text-blue-600 transition bg-gray-50 hover:bg-blue-50 px-3 py-2 rounded-md border border-gray-200 hover:border-blue-200">
-                        <i class="fa-solid fa-download mr-2"></i> Download Report
+                        <i class="fa-solid fa-download mr-2"></i> Report
                     </button>
 
                     <!-- Notification Bell -->
@@ -84,7 +89,7 @@
             </div>
         </div>
 
-        <!-- ANALYTICS SECTION (Wrapped in ID for Screenshot) -->
+        <!-- ANALYTICS SECTION -->
         <div id="report-section" class="bg-gray-50 p-2 rounded-xl">
             <div class="flex justify-between items-center mb-4 px-2">
                 <h2 class="text-lg font-bold text-gray-700 uppercase tracking-wide">Weekly Status Report</h2>
@@ -135,7 +140,6 @@
                 </div>
             </div>
         </div>
-        <!-- End Report Section -->
 
         <!-- PMO Stats Filters -->
         <div id="pmo-controls" class="hidden mb-6 bg-white p-4 rounded-lg shadow-sm border border-purple-100">
@@ -166,8 +170,9 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Subject</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">AI Category</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Priority</th>
+                            <!-- NEW: Added Ministries Column -->
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Assigned To</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">AI Priority</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -180,9 +185,15 @@
         </div>
     </div>
 
-    <!-- Modals (Detail & Status - Same as before) -->
+    <!-- Modals (Detail, Status, Bulk) -->
+    <!-- Detail Modal -->
     <div id="details-modal" class="fixed inset-0 z-50 hidden" aria-modal="true"><div class="absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()"></div><div class="flex items-center justify-center min-h-screen p-4"><div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl z-10 overflow-hidden flex flex-col max-h-[90vh]"><div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50"><div><h3 class="text-lg font-bold text-gray-900" id="detail-title">...</h3><p class="text-xs text-gray-500 font-mono mt-0.5" id="detail-id">ID: ...</p></div><button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600 transition"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="p-6 overflow-y-auto"><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><div class="bg-blue-50 p-4 rounded-lg border border-blue-100"><h4 class="text-xs font-bold text-blue-700 uppercase mb-2 flex items-center"><i class="fa-solid fa-robot mr-2"></i> AI Analysis</h4><div class="space-y-2 text-sm"><div class="flex justify-between"><span class="text-gray-600">Category:</span><span class="font-medium text-gray-900" id="detail-category">...</span></div><div class="flex justify-between"><span class="text-gray-600">Priority:</span><span class="font-bold" id="detail-priority">...</span></div></div></div><div class="bg-gray-50 p-4 rounded-lg border border-gray-100"><h4 class="text-xs font-bold text-gray-700 uppercase mb-2 flex items-center"><i class="fa-solid fa-user mr-2"></i> Complainant Details</h4><div class="space-y-1 text-sm"><p><span class="text-gray-500 w-16 inline-block">Name:</span> <span class="font-medium text-gray-900" id="detail-user">...</span></p><p><span class="text-gray-500 w-16 inline-block">Email:</span> <span class="font-medium text-gray-900" id="detail-email">...</span></p></div></div></div><div class="mb-6"><h4 class="text-sm font-bold text-gray-900 mb-2">Full Description</h4><div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap" id="detail-desc">...</div></div><div class="mb-6" id="attachment-section"><h4 class="text-sm font-bold text-gray-900 mb-2">Supporting Documents</h4><div id="detail-attachment-container"></div></div></div><div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3"><button onclick="closeDetailsModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">Close</button><button id="btn-open-update" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"><i class="fa-solid fa-pen-to-square mr-2"></i> Update Status</button></div></div></div></div>
+    
+    <!-- Status Modal -->
     <div id="status-modal" class="fixed inset-0 z-[60] hidden" aria-modal="true"><div class="absolute inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm" onclick="closeStatusModal()"></div><div class="flex items-center justify-center min-h-screen p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 p-6 relative"><h3 class="text-lg font-bold text-gray-900 mb-4">Update Resolution Status</h3><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-1">New Status</label><select id="update-status-select" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"><option value="PENDING">Pending</option><option value="IN_PROGRESS">In Progress</option><option value="RESOLVED">Resolved</option><option value="REJECTED">Rejected</option></select></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Official Remarks (Visible to Citizen)</label><textarea id="update-remarks" rows="3" class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Remarks..."></textarea></div></div><div class="mt-6 flex justify-end space-x-3"><button onclick="closeStatusModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button><button onclick="submitStatusUpdate()" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 shadow-sm">Confirm Update</button></div></div></div></div>
+
+    <!-- Bulk Modal -->
+    <div id="bulk-modal" class="fixed inset-0 z-50 hidden" aria-modal="true"><div class="absolute inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm" onclick="closeBulkModal()"></div><div class="flex items-center justify-center min-h-screen p-4"><div class="bg-white rounded-xl shadow-2xl w-full max-w-lg z-10 p-6 relative"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-gray-900">Bulk Create Admin Accounts</h3><button onclick="closeBulkModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button></div><p class="text-sm text-gray-500 mb-4">Upload an Excel file (.xlsx) to create multiple admin accounts at once.<br>Format: <strong>Username, Email, Password, First Name, Last Name, Phone, Ministry, Department</strong>.</p><div class="space-y-4"><div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition cursor-pointer" onclick="document.getElementById('bulk-file').click()"><i class="fa-solid fa-file-excel text-green-600 text-3xl mb-2"></i><p class="text-sm font-medium text-gray-700" id="bulk-file-label">Click to select Excel file</p><input type="file" id="bulk-file" accept=".xlsx" class="hidden" onchange="updateFileLabel(this)"></div></div><div id="bulk-result" class="mt-4 hidden p-3 rounded-md text-sm"></div><div class="mt-6 flex justify-end space-x-3"><button onclick="closeBulkModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button><button onclick="submitBulkUpload()" id="btn-upload-bulk" class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 shadow-sm"><i class="fa-solid fa-upload mr-2"></i> Upload & Create</button></div></div></div></div>
 
     <script>
         const API_URL = 'http://127.0.0.1:8000/api';
@@ -198,24 +209,31 @@
             document.addEventListener('click', (e) => { if (!document.getElementById('notification-container').contains(e.target)) document.getElementById('notification-dropdown').classList.add('hidden'); });
         });
 
-        // --- NEW: REPORT DOWNLOAD LOGIC ---
+        // --- BULK UPLOAD ---
+        function openBulkModal() { document.getElementById('bulk-modal').classList.remove('hidden'); }
+        function closeBulkModal() { document.getElementById('bulk-modal').classList.add('hidden'); document.getElementById('bulk-file').value = ''; document.getElementById('bulk-file-label').innerText = 'Click to select Excel file'; document.getElementById('bulk-result').classList.add('hidden'); }
+        function updateFileLabel(input) { if(input.files && input.files[0]) document.getElementById('bulk-file-label').innerText = input.files[0].name; }
+        async function submitBulkUpload() {
+            const input = document.getElementById('bulk-file'); const resultDiv = document.getElementById('bulk-result'); const btn = document.getElementById('btn-upload-bulk');
+            if (!input.files || !input.files[0]) { Toastify({ text: "Please select a file first", style: { background: "#ef4444" } }).showToast(); return; }
+            const formData = new FormData(); formData.append('file', input.files[0]);
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...'; resultDiv.classList.add('hidden');
+            try {
+                const res = await fetch(`${API_URL}/bulk-admin-create/`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+                const data = await res.json(); resultDiv.classList.remove('hidden');
+                if (res.ok) { resultDiv.className = "mt-4 p-3 rounded-md text-sm bg-green-50 text-green-800 border border-green-200"; resultDiv.innerHTML = `<strong>Success!</strong> ${data.message}`; if(data.errors && data.errors.length > 0) { resultDiv.innerHTML += `<br><br><strong>Warnings:</strong><ul class="list-disc pl-5 mt-1">${data.errors.map(e => `<li>${e}</li>`).join('')}</ul>`; } setTimeout(() => { closeBulkModal(); loadDashboardData(); }, 3000); }
+                else { resultDiv.className = "mt-4 p-3 rounded-md text-sm bg-red-50 text-red-800 border border-red-200"; resultDiv.innerHTML = `<strong>Error:</strong> ${data.error || 'Upload failed.'}`; }
+            } catch (e) { console.error(e); Toastify({ text: "Network error", style: { background: "#ef4444" } }).showToast(); }
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-upload mr-2"></i> Upload & Create'; }
+        }
+
+        // --- REPORT DOWNLOAD ---
         function downloadReport() {
             const element = document.getElementById('report-section');
-            
-            // Show toast to indicate processing
             Toastify({ text: "Generating report...", style: { background: "#3b82f6" } }).showToast();
-
             html2canvas(element, { scale: 2 }).then(canvas => {
-                // Create a link to download the image
-                const link = document.createElement('a');
-                link.download = `Gunaso_Report_${new Date().toISOString().split('T')[0]}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-                Toastify({ text: "Report downloaded!", style: { background: "#10b981" } }).showToast();
-            }).catch(err => {
-                console.error(err);
-                Toastify({ text: "Failed to generate report", style: { background: "#ef4444" } }).showToast();
-            });
+                const link = document.createElement('a'); link.download = `Gunaso_Report_${new Date().toISOString().split('T')[0]}.png`; link.href = canvas.toDataURL(); link.click(); Toastify({ text: "Report downloaded!", style: { background: "#10b981" } }).showToast();
+            }).catch(err => { Toastify({ text: "Failed to generate report", style: { background: "#ef4444" } }).showToast(); });
         }
 
         async function loadProfile() {
@@ -230,7 +248,8 @@
                 badge.classList.remove('hidden');
                 if (currentRole === 'SUPER' || (profile.user && profile.user.is_superuser)) {
                     badge.textContent = "PMO / Super Admin"; badge.className = "ml-4 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200";
-                    document.getElementById('pmo-controls').classList.remove('hidden'); loadMinistriesList();
+                    document.getElementById('pmo-controls').classList.remove('hidden'); document.getElementById('btn-bulk-create').classList.remove('hidden'); document.getElementById('btn-bulk-create').classList.add('flex');
+                    loadMinistriesList();
                 } else { badge.textContent = profile.ministry || "Ministry Admin"; }
             } catch (e) { window.location.href = 'login.html'; }
         }
@@ -244,12 +263,7 @@
                 animateValue("stat-total", parseInt(document.getElementById("stat-total").innerText), stats.total, 1000);
                 animateValue("stat-resolved", parseInt(document.getElementById("stat-resolved").innerText), stats.resolved, 1000);
                 animateValue("stat-pending", parseInt(document.getElementById("stat-pending").innerText), stats.pending, 1000);
-                
-                // Notif Badge
-                const badge = document.getElementById('notification-badge');
-                if (stats.pending > 0) { badge.textContent = stats.pending > 99 ? '99+' : stats.pending; badge.classList.remove('opacity-0'); }
-                else { badge.classList.add('opacity-0'); }
-                
+                const badge = document.getElementById('notification-badge'); if (stats.pending > 0) { badge.textContent = stats.pending > 99 ? '99+' : stats.pending; badge.classList.remove('opacity-0'); } else { badge.classList.add('opacity-0'); }
                 renderChart(stats);
             } catch (e) {}
         }
@@ -271,7 +285,10 @@
                 const data = await res.json();
                 let complaints = data.results || data;
                 const ministryFilter = document.getElementById('ministry-filter')?.value;
-                if (currentRole === 'SUPER' && ministryFilter) { complaints = complaints.filter(c => c.ministry === ministryFilter || c.ministry_id == ministryFilter); }
+                if (currentRole === 'SUPER' && ministryFilter) { 
+                    // Filter based on the list of ministries
+                    complaints = complaints.filter(c => c.ministries.some(m => m.name === ministryFilter));
+                }
                 complaintsData = complaints;
                 renderTable(complaints);
                 updateNotifications(complaints);
@@ -283,11 +300,16 @@
             if (!complaints.length) { tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400 font-medium">No grievances found.</td></tr>'; return; }
             complaints.forEach(c => {
                 const pColor = c.ai_suggested_priority === 'HIGH' ? 'bg-red-100 text-red-700 border-red-200' : (c.ai_suggested_priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-gray-100 text-gray-600 border-gray-200');
-                let sColor = 'bg-gray-100 text-gray-800';
-                if(c.status === 'RESOLVED') sColor = 'bg-green-100 text-green-700';
-                if(c.status === 'IN_PROGRESS') sColor = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
-                if(c.status === 'REJECTED') sColor = 'bg-red-50 text-red-700 border border-red-200';
-                tbody.innerHTML += `<tr class="hover:bg-gray-50 transition border-b border-gray-50 last:border-0"><td class="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-500">#${c.tracking_id.substring(0,6)}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">${c.title}</td><td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500"><i class="fa-solid fa-wand-magic-sparkles text-purple-400 mr-1"></i> ${c.ai_suggested_category || 'N/A'}</td><td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wide ${pColor}">${c.ai_suggested_priority || 'LOW'}</span></td><td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${sColor}">${c.status.replace('_', ' ')}</span></td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button onclick="openDetailsModal('${c.tracking_id}')" class="text-gray-500 hover:text-blue-600 transition bg-white border border-gray-200 hover:border-blue-300 p-1.5 rounded-md shadow-sm"><i class="fa-regular fa-eye"></i></button><button onclick="openStatusModal('${c.tracking_id}', '${c.status}')" class="text-gray-500 hover:text-green-600 transition bg-white border border-gray-200 hover:border-green-300 p-1.5 rounded-md shadow-sm"><i class="fa-solid fa-pen"></i></button></td></tr>`;
+                let sColor = c.status === 'RESOLVED' ? 'bg-green-100 text-green-700' : (c.status === 'IN_PROGRESS' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : (c.status === 'REJECTED' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-gray-100 text-gray-800'));
+                
+                // Format Ministries
+                let ministryNames = 'N/A';
+                if (c.ministries && c.ministries.length > 0) {
+                    ministryNames = c.ministries.map(m => m.name).join(', ');
+                    if(ministryNames.length > 50) ministryNames = ministryNames.substring(0, 50) + '...';
+                }
+
+                tbody.innerHTML += `<tr class="hover:bg-gray-50 transition border-b border-gray-50 last:border-0"><td class="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-500">#${c.tracking_id.substring(0,6)}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">${c.title}</td><td class="px-6 py-4 whitespace-nowrap text-xs text-gray-600 truncate max-w-[200px]" title="${ministryNames}"><i class="fa-solid fa-building-columns text-gray-400 mr-1"></i> ${ministryNames}</td><td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wide ${pColor}">${c.ai_suggested_priority || 'LOW'}</span></td><td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${sColor}">${c.status.replace('_', ' ')}</span></td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button onclick="openDetailsModal('${c.tracking_id}')" class="text-gray-500 hover:text-blue-600 transition bg-white border border-gray-200 hover:border-blue-300 p-1.5 rounded-md shadow-sm"><i class="fa-regular fa-eye"></i></button><button onclick="openStatusModal('${c.tracking_id}', '${c.status}')" class="text-gray-500 hover:text-green-600 transition bg-white border border-gray-200 hover:border-green-300 p-1.5 rounded-md shadow-sm"><i class="fa-solid fa-pen"></i></button></td></tr>`;
             });
         }
 
@@ -297,7 +319,6 @@
             const list = document.getElementById('notification-list');
             const seenIds = JSON.parse(localStorage.getItem('seen_complaints') || '[]');
             const unseenCount = pending.filter(c => !seenIds.includes(c.tracking_id)).length;
-            
             list.innerHTML = '';
             if (pending.length === 0) list.innerHTML = '<div class="p-8 text-center text-gray-400 text-sm">No new notifications</div>';
             else pending.forEach(c => {

@@ -8,13 +8,8 @@ class IsOwnerOrAdmin(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
-
-        # Write permissions are only allowed to the owner of the complaint or a superuser.
-        # FIXED: Changed 'submitted_by' to 'created_by' to match the Model
         return obj.created_by == request.user or request.user.is_superuser
 
 
@@ -24,16 +19,12 @@ class IsMinistryAdmin(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        # Must be authenticated and have a profile
         if not request.user.is_authenticated or not hasattr(request.user, 'profile'):
             return False
 
-        # User must be an Admin and assigned to a ministry
         profile = request.user.profile
-        # Check if role is ADMIN or SUPER (PMO)
-        is_admin = profile.role == UserProfile.ROLE_CHOICES[1][0]  # ADMIN
-        is_super = profile.role == UserProfile.ROLE_CHOICES[2][0]  # SUPER
-
+        is_admin = profile.role == 'ADMIN'
+        is_super = profile.role == 'SUPER'
         return (is_admin and profile.ministry is not None) or is_super
 
     def has_object_permission(self, request, view, obj):
@@ -42,34 +33,27 @@ class IsMinistryAdmin(permissions.BasePermission):
             if not hasattr(request.user, 'profile'):
                 return False
 
-            # Super Admin (PMO) can see everything
             if request.user.profile.role == 'SUPER' or request.user.is_superuser:
                 return True
 
-            # Ministry Admin checks
-            return obj.ministry == request.user.profile.ministry
+            # UPDATED: Check if admin's ministry is IN the complaint's list of ministries
+            admin_ministry = request.user.profile.ministry
+            return admin_ministry in obj.ministries.all()
 
-        # Allow write access (e.g., updating status)
+        # Allow write access
         if not hasattr(request.user, 'profile'):
             return False
 
-        # Super Admin can edit everything
         if request.user.profile.role == 'SUPER' or request.user.is_superuser:
             return True
 
-        # Ministry Admin can only edit their ministry's complaints
-        return obj.ministry == request.user.profile.ministry
+        # UPDATED: Admin can only edit if their ministry is involved
+        admin_ministry = request.user.profile.ministry
+        return admin_ministry in obj.ministries.all()
 
 
 class IsCitizen(permissions.BasePermission):
-    """
-    Custom permission to allow access only to users with the 'CITIZEN' role.
-    """
-
     def has_permission(self, request, view):
-        # Must be authenticated and have a profile
         if not request.user.is_authenticated or not hasattr(request.user, 'profile'):
             return False
-
-        # User's role must be 'CITIZEN'
         return request.user.profile.role == 'CITIZEN'

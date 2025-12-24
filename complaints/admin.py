@@ -5,12 +5,7 @@ from .models import Ministry, Department, Complaint, ComplaintUpdate, UserProfil
 
 
 # --- User Admin ---
-
 class UserProfileInline(admin.StackedInline):
-    """
-    This allows us to edit the UserProfile (role, ministry)
-    directly inside the User's admin page.
-    """
     model = UserProfile
     can_delete = False
     verbose_name_plural = 'Profile (Role & Ministry)'
@@ -18,17 +13,11 @@ class UserProfileInline(admin.StackedInline):
 
 
 class CustomUserAdmin(BaseUserAdmin):
-    """
-    A custom User admin that includes the UserProfile inline.
-    """
     inlines = (UserProfileInline,)
-
-    # Add 'get_role' to the list display
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_role')
     list_select_related = ('profile',)
 
     def get_role(self, instance):
-        """Fetches the role from the user's profile."""
         try:
             return instance.profile.get_role_display()
         except UserProfile.DoesNotExist:
@@ -36,91 +25,61 @@ class CustomUserAdmin(BaseUserAdmin):
 
     get_role.short_description = 'Role'
 
-    def get_inline_instances(self, request, obj=None):
-        if not obj:
-            return list()
-        return super().get_inline_instances(request, obj)
 
-
-# Unregister the default User admin and register our custom one
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
 
 
 # --- Ministry & Department Admins ---
-
 @admin.register(Ministry)
 class MinistryAdmin(admin.ModelAdmin):
-    """
-    Admin view for Ministries.
-    (Fix: Removed 'description' which doesn't exist)
-    """
     list_display = ('name', 'created_at')
     search_fields = ('name',)
 
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    """
-    Admin view for Departments.
-    """
     list_display = ('name', 'ministry', 'created_at')
     search_fields = ('name', 'ministry__name')
     list_filter = ('ministry',)
 
 
 # --- Complaint Admins ---
-
 class ComplaintUpdateInline(admin.TabularInline):
-    """
-    Allows viewing (but not adding) complaint updates
-    directly from the Complaint admin page.
-    """
     model = ComplaintUpdate
-    extra = 0  # Don't show any extra 'add' forms
+    extra = 0
     readonly_fields = ('user', 'update_text', 'created_at')
     can_delete = False
 
 
 @admin.register(Complaint)
 class ComplaintAdmin(admin.ModelAdmin):
-    """
-    The main admin view for managing Complaints.
-    (Fix: Removed fields that don't exist like 'ai_summary')
-    """
     list_display = (
         'tracking_id',
         'title',
         'status',
         'created_by',
-        'ministry',
-        'department',
+        'get_ministries',  # Display M2M
         'created_at',
-        'ai_suggested_priority'  # Added the correct field
+        'ai_suggested_priority'
     )
-    search_fields = ('title', 'tracking_id', 'created_by__username', 'ministry__name')
-    list_filter = ('status', 'ministry', 'ai_suggested_priority')
-
-    # Make fields read-only
+    search_fields = ('title', 'tracking_id', 'created_by__username', 'ministries__name')
+    list_filter = ('status', 'ministries', 'ai_suggested_priority')
     readonly_fields = (
-        'tracking_id',
-        'created_by',
-        'created_at',
-        'updated_at',
-        'ai_suggested_category',  # Added the correct field
-        'ai_suggested_priority'  # Added the correct field
+        'tracking_id', 'created_by', 'created_at', 'updated_at',
+        'ai_suggested_category', 'ai_suggested_priority'
     )
-
-    # Add the updates inline
     inlines = [ComplaintUpdateInline]
+
+    # Custom method to display M2M field in list
+    def get_ministries(self, obj):
+        return ", ".join([m.name for m in obj.ministries.all()])
+
+    get_ministries.short_description = 'Ministries'
 
 
 @admin.register(ComplaintUpdate)
 class ComplaintUpdateAdmin(admin.ModelAdmin):
-    """
-    A separate admin view for just looking at Complaint Updates.
-    (Fix: Removed 'old_status' and 'new_status')
-    """
     list_display = ('complaint', 'user', 'created_at')
     search_fields = ('complaint__tracking_id', 'user__username')
     readonly_fields = ('complaint', 'user', 'update_text', 'created_at')

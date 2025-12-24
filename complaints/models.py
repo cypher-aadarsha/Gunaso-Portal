@@ -33,7 +33,7 @@ class Department(models.Model):
         return f"{self.name} ({self.ministry.name})"
 
 
-# --- User Profile Model (UPDATED) ---
+# --- User Profile Model ---
 
 def get_id_document_upload_path(instance, filename):
     ext = filename.split('.')[-1]
@@ -50,16 +50,14 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='profile')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='CITIZEN')
-
-    # NEW FIELD: Phone Number
     phone_number = models.CharField(max_length=15, null=True, blank=True)
-
     government_id_document = models.FileField(
         upload_to=get_id_document_upload_path,
         null=True,
         blank=True
     )
 
+    # Admins still belong to ONE ministry/department primarily for their jurisdiction
     ministry = models.ForeignKey(Ministry, on_delete=models.SET_NULL, null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -91,10 +89,13 @@ class Complaint(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # User & Admin Info
+    # User Info
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='complaints')
-    ministry = models.ForeignKey(Ministry, on_delete=models.SET_NULL, null=True)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
+
+    # --- UPDATED: Many-to-Many Relationships ---
+    # A complaint can now be linked to multiple Ministries and Departments
+    ministries = models.ManyToManyField(Ministry, related_name='complaints')
+    departments = models.ManyToManyField(Department, related_name='complaints', blank=True)
 
     # Files
     attachment = models.FileField(upload_to='complaint_attachments/', null=True, blank=True)

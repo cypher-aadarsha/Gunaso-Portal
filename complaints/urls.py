@@ -20,4 +20,7 @@ urlpatterns = [
 
     # New Profile URL
     path('profile/', views.UserProfileView.as_view(), name='user-profile'),
+
+    # Bulk Admin Creation URL
+    path('bulk-admin-create/', views.BulkAdminCreateView.as_view(), name='bulk-admin-create'),
 ]

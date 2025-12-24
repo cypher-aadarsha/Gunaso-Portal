@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_celery_results', # Optional but good practice for 'django-db' backend
+    'django_celery_results',
 
     # 3rd Party Apps
     'rest_framework',
@@ -115,16 +115,13 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
-# --- Celery Configuration (NO REDIS MODE) ---
-# We use 'memory' as the broker so it doesn't look for a server
+# --- Celery Configuration ---
 CELERY_BROKER_URL = 'memory://'
-CELERY_RESULT_BACKEND = 'django-db' # Store results in SQLite instead of Redis
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
-
-# Execute tasks locally (Synchronous)
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 
@@ -145,3 +142,13 @@ JAZZMIN_SETTINGS = {
 
 # --- CORS Configuration ---
 CORS_ALLOW_ALL_ORIGINS = True
+
+# --- REAL GMAIL CONFIGURATION ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+# You must set these in your .env file!
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
