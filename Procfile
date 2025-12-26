@@ -1,0 +1,1 @@
+web: gunicorn grievance_portal.wsgi:application --log-file -

@@ -1,11 +1,11 @@
 # Core Django and REST framework
-
 Django>=4.2
 djangorestframework
 django-cors-headers
 Pillow # <-- ADDED: Required for ImageField and file uploads (like the ID)
+openpyxl
 
-# Celery and Redis for background tasks
+#Celery and Redis for background tasks
 
 celery
 redis
@@ -14,10 +14,11 @@ google-api-python-client
 
 # Database
 #sqlite3         # Default for development
-
-#If you move to PostgreSQL for production, you would add:
-#psycopg2-binary
+# If you move to PostgreSQL for production, you would add:
+psycopg2-binary
+dj-database-url
 
 # Production & Utilities
 gunicorn       # Production-ready web server (WSGI)
+whitenoise     # Serves static files efficiently
 python-dotenv  # For managing .env files (to hide your API key)
