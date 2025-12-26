@@ -10,24 +10,18 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file (for local dev)
+# Load environment variables
 load_dotenv()
 
-# --- SECURITY CONFIGURATION ---
-# In production, SECRET_KEY must be in the environment variables
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-@e_1y8@y2-z8t9q$5s)a3b^p+v@!k^!j&m)w)i+o^!p@z^y')
 
 # DEBUG must be False in production
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-# ALLOWED_HOSTS should be a comma-separated list in .env
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,.ondigitalocean.app').split(',')
-
-# Trusted Origins for HTTPS (Important for Digital Ocean)
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1,http://localhost').split(',')
 
-
-# Application definition
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -35,7 +29,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic', # Optimized static file serving during dev
+    'whitenoise.runserver_nostatic', # Optimized dev static serving
     'django.contrib.staticfiles',
     'django_celery_results',
 
@@ -50,7 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Add WhiteNoise here for Static Files
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Essential for serving static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -80,8 +74,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'grievance_portal.wsgi.application'
 
-# --- DATABASE CONFIGURATION ---
-# Looks for DATABASE_URL in environment. If not found, defaults to local SQLite.
+# Database
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -99,16 +92,28 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Kathmandu' # Updated to Nepal Time
+TIME_ZONE = 'Asia/Kathmandu'
 USE_I18N = True
 USE_TZ = True
 
-# --- STATIC & MEDIA FILES ---
-STATIC_URL = 'static/'
+# --- STATIC & MEDIA FILES CONFIGURATION (CRITICAL FIX) ---
+
+# URL to access static files (e.g. /static/css/style.css)
+STATIC_URL = '/static/'
+
+# Where 'collectstatic' will put all files for production
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# WhiteNoise configuration for serving static files in production
+
+# Where Django looks for your custom static files (images, css) during development
+# AND where it copies them from during 'collectstatic'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'frontend'), # Since your images are in MOEST Project/frontend/images
+]
+
+# WhiteNoise Storage - Compression and Caching
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Media Files (User Uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -126,8 +131,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
-# --- Celery Configuration ---
-# Uses REDIS_URL from environment if available, else memory (for dev)
+# Celery Configuration
 CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'memory://')
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
@@ -135,8 +139,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Kathmandu'
 
-# --- Email Configuration ---
-# Reads SMTP settings from environment variables
+# Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -145,9 +148,22 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-# Fallback for dev: if no email creds, print to console
 if not EMAIL_HOST_USER:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# --- CORS ---
-CORS_ALLOW_ALL_ORIGINS = True # Restrict this in production to your frontend domain
+# Django Jazzmin Settings
+JAZZMIN_SETTINGS = {
+    "site_title": "Gunaso Portal Admin",
+    "site_header": "Gunaso Portal",
+    "site_brand": "Gunaso Portal",
+    "site_logo": None,
+    "welcome_sign": "Welcome to the Gunaso Portal Admin",
+    "copyright": "Gunaso Portal Ltd.",
+    "topmenu_links": [
+        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"app": "complaints", "model": "Complaint", "name": "Complaints"},
+    ],
+    "show_ui_builder": True,
+}
+
+CORS_ALLOW_ALL_ORIGINS = True
