@@ -5,9 +5,9 @@ django-cors-headers
 Pillow # <-- ADDED: Required for ImageField and file uploads (like the ID)
 openpyxl
 django-jazzmin
-
+django-celery-results   # Stores Celery task results in DB
 #Celery and Redis for background tasks
-
+Pillow
 celery
 redis
 google-generativeai
