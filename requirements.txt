@@ -4,6 +4,7 @@ djangorestframework
 django-cors-headers
 Pillow # <-- ADDED: Required for ImageField and file uploads (like the ID)
 openpyxl
+django-jazzmin
 
 #Celery and Redis for background tasks
 
